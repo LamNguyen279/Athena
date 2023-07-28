@@ -88,6 +88,6 @@ extern void vTaskActivate(vTaskHandler_t *task);
 
 extern void vTaskTerminate();
 
-extern void vTaskTickDelay(uint32_t ms);
+extern void vTaskTicksDelay(uint32_t ticks);
 
 #endif /* VTASK_H_ */

@@ -19,6 +19,10 @@
 #define VOS_FALSE  FALSE
 #endif
 
+#ifndef VOS_TRUE
+#define VOS_TRUE  TRUE
+#endif
+
 typedef void (*vOsHook_t)(void);
 
 #ifdef VOS_CFG_DEBUG_ENABLED

@@ -17,8 +17,7 @@
 typedef enum _vSchedulerState_t
 {
   VSCHEDULER_STATE_STOP = 0,
-  VSCHEDULER_STATE_RUNNING,
-  VSCHEDULER_STATE_WAIT
+  VSCHEDULER_STATE_RUNNING
 } vSchedulerState_t;
 
 typedef struct _ReadyTaskNode_t
@@ -67,17 +66,10 @@ void vSchedulerStart(void)
 {
   _vScheduler.State = VSCHEDULER_STATE_RUNNING;
 
-  SetPriorityClass( GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-  SetProcessAffinityMask( GetCurrentProcess(), 1 );
-
   while(1)
   {
-    WaitForSingleObject( _vSchedulerMutex, INFINITE );
-
     Sleep(VOS_CFG_SYSTICK_MS);
     _vSchedulerMainFunction();
-
-    ReleaseMutex( _vSchedulerMutex );
   }
 }
 
@@ -100,11 +92,7 @@ vTaskHandler_t *vSchedulerGetCurRunTask(void)
 
 void vSchedulerWaitForSchedulePoint(void)
 {
-  _vScheduler.State = VSCHEDULER_STATE_WAIT;
-  vTaskTickDelay(1);
-  while(_vScheduler.State == VSCHEDULER_STATE_WAIT)
-  {
-  }
+  vTaskTicksDelay(3);
 }
 /*****************************************************************************
  * Private function declaration
@@ -205,11 +193,11 @@ static vTaskHandler_t *_vSchedulerDequeueTask(void)
     if( (_vScheduler.CurTask->WaitMask != 0) &&
        ( ((_vScheduler.CurTask->WaitMask) ^ (_vScheduler.CurTask->WaitValue)) != 0 ))
     {
-      vTaskHandler_t *suspendTask = _vScheduler.CurTask;
-      SuspendThread(suspendTask->W32Thread.Hdl);
-
       _vScheduler.CurTask->State = VTASK_STATE_WAIT;
       _vScheduler.CurTask->SubState = VTASK_SUBSTATE_WAIT_EVENT;
+
+      vTaskHandler_t *suspendTask = _vScheduler.CurTask;
+      SuspendThread(suspendTask->W32Thread.Hdl);
 
       _vScheduler.CurTask = VOS_NULL;
 
@@ -233,10 +221,10 @@ static vTaskHandler_t *_vSchedulerDequeueTask(void)
           (_vScheduler.CurTask->Priority < _vScheduler.ReadyTasks->Task->Priority))
       {
         vTaskHandler_t *suspendTask = _vScheduler.CurTask;
-        SuspendThread(suspendTask->W32Thread.Hdl);
 
-        _vScheduler.CurTask->State = VTASK_STATE_READY;
-        _vScheduler.CurTask->SubState = VTASK_SUBSTATE_READY_PAUSE;
+        suspendTask->State = VTASK_STATE_READY;
+        suspendTask->SubState = VTASK_SUBSTATE_READY_PAUSE;
+        SuspendThread(suspendTask->W32Thread.Hdl);
 
         _vScheduler.CurTask = _vScheduler.ReadyTasks->Task;
 
@@ -279,6 +267,8 @@ void vSchedulerTerminateTask(void)
 
 static void _vShedulerHandleTask(void)
 {
+  WaitForSingleObject( _vSchedulerMutex, INFINITE );
+
   vTaskHandler_t *task = _vSchedulerDequeueTask();
   if(task != VOS_NULL)
   {
@@ -306,9 +296,8 @@ static void _vShedulerHandleTask(void)
 
           if(task->W32Thread.Hdl)
           {
-            SetThreadAffinityMask( task->W32Thread.Hdl, 0x01 );
-            SetThreadPriorityBoost( task->W32Thread.Hdl, TRUE );
-            SetThreadPriority( task->W32Thread.Hdl, THREAD_PRIORITY_TIME_CRITICAL );
+//            SetThreadPriorityBoost( task->W32Thread.Hdl, TRUE );
+//            SetThreadPriority( task->W32Thread.Hdl, THREAD_PRIORITY_TIME_CRITICAL );
             task->SubState = VTASK_SUBSTATE_RUNING_NEW;
           }
         }
@@ -325,8 +314,8 @@ static void _vShedulerHandleTask(void)
       default:
         break;
     }
-
   }
+  ReleaseMutex( _vSchedulerMutex );
 }
 
 static void _vSchedulerHandleIsr(void)
@@ -338,8 +327,6 @@ static void _vSchedulerMainFunction(void)
 {
   _vSchedulerHandleIsr();
   _vShedulerHandleTask();
-
-  _vScheduler.State = VSCHEDULER_STATE_RUNNING;
 }
 
 /*****************************************************************************

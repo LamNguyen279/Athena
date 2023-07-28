@@ -15,8 +15,11 @@ static void *_vTaskMutex;
 static vTaskHandler_t *_vTaskAllocate(void);
 static void _vTaskFree(vTaskHandler_t *task);
 
+static uint8_t vTaskInitFlag = VOS_FALSE;
+
 void vTaskInit(void)
 {
+  vTaskInitFlag = VOS_TRUE;
   _vTaskMutex = CreateMutex(VOS_NULL, VOS_FALSE, VOS_NULL);
 }
 
@@ -27,34 +30,37 @@ vTaskPreemptibility_t PreempMode)
 {
   vTaskHandler_t *vNewTask = VOS_NULL;
 
-  vNewTask = _vTaskAllocate();
-
-  if(vNewTask != VOS_NULL)
+  if(vTaskInitFlag == VOS_TRUE)
   {
-    //new thread with suspended state
-    vNewTask->W32Thread.Hdl = CreateThread(
-        NULL, 1024,
-        ( LPTHREAD_START_ROUTINE ) Entry,
-        VOS_NULL, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
-        &(vNewTask->W32Thread.Id) );
+    vNewTask = _vTaskAllocate();
 
-    if(vNewTask->W32Thread.Hdl)
+    if(vNewTask != VOS_NULL)
     {
-      SetThreadAffinityMask( vNewTask->W32Thread.Hdl, 0x01 );
-      SetThreadPriorityBoost( vNewTask->W32Thread.Hdl, TRUE );
-      SetThreadPriority( vNewTask->W32Thread.Hdl, THREAD_PRIORITY_TIME_CRITICAL );
-      vNewTask->State = VTASK_STATE_SUSPENDED;
-      vNewTask->SubState = VTASK_SUBSTATE_SUSPENDED_NEW;
+      //new thread with suspended state
+      vNewTask->W32Thread.Hdl = CreateThread(
+          NULL, 1024,
+          ( LPTHREAD_START_ROUTINE ) Entry,
+          VOS_NULL, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+          &(vNewTask->W32Thread.Id) );
 
-      //static
-      vNewTask->Priority = Priority;
-      vNewTask->FuncEntry = Entry;
-      vNewTask->PreempMode = PreempMode;
-    }else
-    {
-      _vTaskFree(vNewTask);
+      if(vNewTask->W32Thread.Hdl)
+      {
+  //      SetThreadAffinityMask( vNewTask->W32Thread.Hdl, 0x01 );
+//        SetThreadPriorityBoost( vNewTask->W32Thread.Hdl, TRUE );
+//        SetThreadPriority( vNewTask->W32Thread.Hdl, THREAD_PRIORITY_TIME_CRITICAL );
+        vNewTask->State = VTASK_STATE_SUSPENDED;
+        vNewTask->SubState = VTASK_SUBSTATE_SUSPENDED_NEW;
+
+        //static
+        vNewTask->Priority = Priority;
+        vNewTask->FuncEntry = Entry;
+        vNewTask->PreempMode = PreempMode;
+      }else
+      {
+        _vTaskFree(vNewTask);
+      }
+
     }
-
   }
 
   return vNewTask;
@@ -94,9 +100,9 @@ void vTaskActivate(vTaskHandler_t *task)
   ReleaseMutex( _vTaskMutex );
 }
 
-void vTaskTickDelay(uint32_t ms)
+void vTaskTicksDelay(uint32_t ticks)
 {
-  Sleep(VOS_CFG_SYSTICK_MS);
+  Sleep(VOS_CFG_SYSTICK_MS * ticks);
 }
 
 void vTaskTerminate()

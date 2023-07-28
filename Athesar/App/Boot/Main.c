@@ -1,9 +1,6 @@
 #include "vTask.h"
 #include "vScheduler.h"
 #include "vEvent.h"
-#include "vOs_Cfg.h"
-
-#include <sys\timeb.h>
 
 vTaskHandler_t *Task0hdl, *Task1hdl, *Task2hdl, *Task3hdl;
 
@@ -12,7 +9,7 @@ void OsIdleHook()
   static int a;
   a++;
 
-  if(a % 500 == 0)
+  if(a % 10 == 0)
   {
     vTaskActivate(Task2hdl); //A
     vEventSet(Task3hdl, vOsEvent0);
@@ -25,6 +22,10 @@ void task0(void)
 {
   uint32_t a = 1;
 
+  for(a = 0; a < 10000; a++) //B
+  {
+
+  }
 
   vTaskTerminate();  //C
 }
@@ -35,6 +36,10 @@ void task1(void)
 
   vTaskActivate(Task0hdl); //D
 
+  for(a = 0; a < 100000; a++)
+  {
+
+  }
 
   vTaskTerminate(); //E
 }
@@ -46,6 +51,10 @@ void task2(void)
 
   vTaskActivate(Task1hdl); //F
 
+  for(a = 0; a < 100000000; a++)
+  {
+    b++;
+  }
 
   vTaskTerminate(); //G
 }
@@ -55,8 +64,6 @@ void task3(void)
   uint32_t task3Ctn = 0;
   vEventMask_t task3EventMask;
 
-  struct timeb start, end;
-  int diff;
 
   while(1)
   {
@@ -73,14 +80,6 @@ void task3(void)
     {
       vEventClear(vOsEvent1);
       task3Ctn++;
-
-      ftime(&end);
-      diff = (int) (1000.0 * (end.time - start.time)
-          + (end.millitm - start.millitm));
-
-      printf("\nOperation took %u milliseconds\n", diff);
-      fflush(stdout);
-      ftime(&start);
     }
   }
 
@@ -88,14 +87,15 @@ void task3(void)
 }
 
 int main()
-{                    // entry, prio, Preempt policy
-  Task0hdl = vTaskCreate(task0, 4, VTASK_PREEMP_FULL);
-  Task1hdl = vTaskCreate(task1, 3, VTASK_PREEMP_NON);
-  Task2hdl = vTaskCreate(task2, 1, VTASK_PREEMP_FULL);
-  Task3hdl = vTaskCreate(task3, 2, VTASK_PREEMP_FULL);
+{
 
   vTaskInit();
   vSchedulerInit();
+                        // entry, prio, Preempt policy
+  Task0hdl = vTaskCreate(task0, 4, VTASK_PREEMP_FULL);
+  Task1hdl = vTaskCreate(task1, 3, VTASK_PREEMP_NON);
+  Task2hdl = vTaskCreate(task2, 1, VTASK_PREEMP_FULL);
+  Task3hdl = vTaskCreate(task3, 2, VTASK_PREEMP_NON);
 
   vTaskActivate(Task2hdl);
   vTaskActivate(Task3hdl);

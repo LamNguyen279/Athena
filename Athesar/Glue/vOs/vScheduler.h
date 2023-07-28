@@ -13,12 +13,14 @@
 extern void vSchedulerInit(void);
 
 extern void vSchedulerStart(void);
+
 extern void vSchedulerStop(void);
 
 extern void vSchedulerTerminateTask(void);
 
 extern void vSchedulerAddTask(vTaskHandler_t *task);
 
+extern void vSchedulerWaitForSchedulePoint(void);
 
 extern vTaskHandler_t *vSchedulerCurTask;
 extern vTaskHandler_t *vSchedulerGetCurRunTask(void);

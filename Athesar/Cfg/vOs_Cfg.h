@@ -9,13 +9,13 @@
 #define VOS_CFG_H_
 
 #include "vOs.h"
-#include "vOsHook.h"
+#include "vOs_Hook.h"
 
 #define VOS_CFG_SYSTICK_MS 1 //lower is better for window CPU loading
 
 #define VOS_CFG_IDLEHOOK OsIdleHook
 
-#define VOS_CFG_DEBUG_ENABLED
+//#define VOS_CFG_DEBUG_ENABLED
 
 /* Define Event */
 #define vOsEvent0      1
