@@ -49,14 +49,9 @@ void task1(void)
 uint32_t b = 0;
 void task2(void)
 {
-  uint32_t a = 1;
-
   vTaskActivate(Task1hdl); //F
 
-  for(a = 0; a < 100000000; a++)
-  {
-    b++;
-  }
+  SoAd_MainFunction();
 
   vTaskTerminate(); //G
 }
@@ -84,8 +79,6 @@ void task3(void)
       task3Ctn++;
     }
   }
-
-  vTaskTerminate(); //I
 }
 
 int main()
@@ -96,7 +89,7 @@ int main()
                         // entry, prio, Preempt policy
   Task0hdl = vTaskCreate(task0, 4, VTASK_PREEMP_FULL);
   Task1hdl = vTaskCreate(task1, 3, VTASK_PREEMP_NON);
-  Task2hdl = vTaskCreate(task2, 1, VTASK_PREEMP_FULL);
+  Task2hdl = vTaskCreate(task2, 1, VTASK_PREEMP_NON);
   Task3hdl = vTaskCreate(task3, 2, VTASK_PREEMP_NON);
 
   vTaskActivate(Task2hdl);
@@ -105,8 +98,8 @@ int main()
   SoAd_SoConGrPar_t soconGrPar = {
       TRUE, //Server
       VTCPIP_AF_INET,
-      VTCPIP_SOCK_STREAM,
-      VTCPIP_IPPROTO_TCP,
+      VTCPIP_SOCK_DGRAM,
+      VTCPIP_IPPROTO_UDP,
       "127.0.0.1",
       12345,
       NULL, //SoAdSocketIpAddrAssignmentChgNotification
@@ -120,7 +113,7 @@ int main()
   PduIdType DoIpTcpConRxPduId = 2; //config
   PduIdType DoIpTcpConTxPduId = 2; //config
 
-  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 13400, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId);
+  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 13400, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId, SOAD_UPPER_DOIP);
 
   SoAd_SoConIdType DoIpTcpConSoConId;
   SoAd_GetSoConId(DoIpTcpConSoAdTxPduId, &DoIpTcpConSoConId);

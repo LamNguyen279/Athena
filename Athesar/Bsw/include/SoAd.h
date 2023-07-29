@@ -39,11 +39,12 @@ typedef struct SoAd_Config_s SoAd_ConfigType;
 
 typedef enum _SoAd_W32SocketState_t
 {
-  VTCPIP_SOCK_INITIALIZED = 1,
-  VTCPIP_SOCK_BIND,
-  VTCPIP_SOCK_CONNECTED,
-  VTCPIP_SOCK_LISTENING,
-  VTCPIP_SOCK_ACCEPTED
+  VTCPIP_SOCK_STATE_INVALID,
+  VTCPIP_SOCK_STATE_NEW,
+  VTCPIP_SOCK_STATE_BIND,
+  VTCPIP_SOCK_STATE_CONNECTED,
+  VTCPIP_SOCK_STATE_LISTENING,
+  VTCPIP_SOCK_STATE_ACCEPTED
 } SoAd_W32SocketState_t;
 
 typedef enum _vTcpIp_SocketType_t
@@ -73,19 +74,34 @@ typedef struct _vTcpIp_SocketPar_t
 
 } vTcpIp_SocketPar_t;
 
-typedef struct _SoAdTcpSock_t
+typedef enum _SoAdUpper_t
 {
-  SOCKET TcpSock;
-  SoAd_W32SocketState_t State;
+  SOAD_UPPER_INVALID = -1,
+  SOAD_UPPER_DOIP
+} SoAdUpper_t;
+
+typedef struct _SoAdSock_t
+{
+  struct
+  {
+    HANDLE Hdl;
+    DWORD Id;
+  } W32Thread;
+  SOCKET W32Sock;
+  SoAd_W32SocketState_t W32SockState;
   char *RxBuff;
+  uint32_t RxLength;
   void *GrAssigned;
   char  RemoteAddress[14];
   uint32 RemotePort;
+  SoAdUpper_t Upper;
   //AUTOSAR
+  uint32 RequestMask;
   SoAd_SoConIdType SoAdSoConId;
+  SoAd_SoConModeType SoAdSoConState;
   PduIdType TxPduId;
-  PduIdType *UpperRxPduId;
-  PduIdType *UpperConfTxPduId;
+  PduIdType UpperRxPduId;
+  PduIdType UpperConfTxPduId;
 } SoAdSock_t;
 
 typedef struct _SoAdConGroup_t
@@ -118,13 +134,12 @@ typedef struct _SoAd_SoConGrPar_t
 } SoAd_SoConGrPar_t;
 /* ================================ [ DECLARES  ] ============================================== */
 /* ================================ [ DATAS     ] ============================================== */
-extern SoAdSock_t SoAd_DynSoConArr[];
 /* ================================ [ LOCALS    ] ============================================== */
 /* ================================ [ FUNCTIONS ] ============================================== */
 
 /*  */
 extern SoAdConGroupHandler_t *SoAd_CreateSoConGr(SoAd_SoConGrPar_t *SoConGrPar);
-extern PduIdType SoAd_CreateSoCon(SoAdConGroupHandler_t *AssignedGr,   char  RemoteAddress[], uint32 RemotePort, PduIdType *UpperRxPduId, PduIdType *UpperTxPduId);
+extern PduIdType SoAd_CreateSoCon(SoAdConGroupHandler_t *AssignedGr,   char  RemoteAddress[], uint32 RemotePort, PduIdType *UpperRxPduId, PduIdType *UpperTxPduId, SoAdUpper_t Upper);
 
 /* @SWS_SoAd_00093 */
 void SoAd_Init(const SoAd_ConfigType *ConfigPtr);

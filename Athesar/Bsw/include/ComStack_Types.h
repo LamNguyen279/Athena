@@ -17,13 +17,13 @@ typedef uint32_t PduLengthType;
 
 /* @SWS_COMTYPE_00011 */
 typedef struct {
-  uint8_t *SduDataPtr;
-  uint8_t *MetaDataPtr;
+  uint8 *SduDataPtr;
+  uint8 *MetaDataPtr;
   PduLengthType SduLength;
 } PduInfoType;
 
 /* @SWS_COMTYPE_00036 */
-typedef uint8_t PNCHandleType;
+typedef uint8 PNCHandleType;
 
 /* @SWS_COMTYPE_00031 */
 typedef enum

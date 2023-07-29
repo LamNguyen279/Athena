@@ -56,7 +56,7 @@ typedef uint32_t vTaskEventMask_t;
 
 typedef struct _vTaskHandler_t
 {
-  struct W32Thread_t
+  struct
   {
     HANDLE Hdl;
     DWORD Id;
