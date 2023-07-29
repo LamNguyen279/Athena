@@ -1,9 +1,4 @@
-/**
- * SSAS - Simple Smart Automotive Software
- * Copyright (C) 2021 Parai Wang <parai@foxmail.com>
- *
- * ref: Specification of Socket Adaptor AUTOSAR CP Release 4.4.0
- */
+
 #ifndef _SOAD_H
 #define _SOAD_H
 /* ================================ [ INCLUDES  ] ============================================== */
@@ -192,10 +187,6 @@ Std_ReturnType SoAd_SetRemoteAddr(SoAd_SoConIdType SoConId,
 /* @SWS_SoAd_00121 */
 void SoAd_MainFunction(void);
 
-Std_ReturnType SoAd_TakeControl(SoAd_SoConIdType SoConId);
-Std_ReturnType SoAd_SetNonBlock(SoAd_SoConIdType SoConId, boolean nonBlocked);
-Std_ReturnType SoAd_SetTimeout(SoAd_SoConIdType SoConId, uint32_t timeoutMs);
-Std_ReturnType SoAd_ControlRx(SoAd_SoConIdType SoConId, uint8_t* data, uint32_t length);
 #ifdef __cplusplus
 }
 #endif

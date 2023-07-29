@@ -50,8 +50,8 @@ void vEventClear(vEventMask_t eventMask)
   if(((curTask->WaitValue) & (eventMask)) != 0)
   {
     //clear value at the position of the mask
-    curTask->WaitValue = 0;
-    curTask->WaitMask = 0;
+    curTask->WaitValue &= ~eventMask;
+    curTask->WaitMask &= ~eventMask;
   }
 
 }
