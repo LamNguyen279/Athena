@@ -37,6 +37,7 @@ typedef struct _vScheduler_t
 /*****************************************************************************
  * Private variables
  ****************************************************************************/
+static uint8_t _vSheduleInitFlag = VOS_FALSE;
 static void *_vSchedulerMutex;
 static vOsHook_t _vSchedulerIdeHookFncPtr;
 static vScheduler_t _vScheduler;
@@ -60,16 +61,21 @@ void vSchedulerInit(void)
   _vSchedulerIdeHookFncPtr = &VOS_CFG_IDLEHOOK;
 
   _vSchedulerMutex = CreateMutex(VOS_NULL, VOS_FALSE, VOS_NULL);
+
+  _vSheduleInitFlag = VOS_TRUE;
 }
 
 void vSchedulerStart(void)
 {
-  _vScheduler.State = VSCHEDULER_STATE_RUNNING;
-
-  while(1)
+  if(_vSheduleInitFlag == VOS_TRUE)
   {
-    Sleep(VOS_CFG_SYSTICK_MS);
-    _vSchedulerMainFunction();
+    _vScheduler.State = VSCHEDULER_STATE_RUNNING;
+
+    while(1)
+    {
+      Sleep(VOS_CFG_SYSTICK_MS);
+      _vSchedulerMainFunction();
+    }
   }
 }
 

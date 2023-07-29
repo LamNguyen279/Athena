@@ -45,7 +45,7 @@ vTaskPreemptibility_t PreempMode)
 
       if(vNewTask->W32Thread.Hdl)
       {
-  //      SetThreadAffinityMask( vNewTask->W32Thread.Hdl, 0x01 );
+//        SetThreadAffinityMask( vNewTask->W32Thread.Hdl, 0x01 );
 //        SetThreadPriorityBoost( vNewTask->W32Thread.Hdl, TRUE );
 //        SetThreadPriority( vNewTask->W32Thread.Hdl, THREAD_PRIORITY_TIME_CRITICAL );
         vNewTask->State = VTASK_STATE_SUSPENDED;

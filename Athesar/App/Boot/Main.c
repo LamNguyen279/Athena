@@ -2,6 +2,8 @@
 #include "vScheduler.h"
 #include "vEvent.h"
 
+#include "SoAd.h"
+
 vTaskHandler_t *Task0hdl, *Task1hdl, *Task2hdl, *Task3hdl;
 
 void OsIdleHook()
@@ -99,6 +101,31 @@ int main()
 
   vTaskActivate(Task2hdl);
   vTaskActivate(Task3hdl);
+
+  SoAd_SoConGrPar_t soconGrPar = {
+      TRUE, //Server
+      VTCPIP_AF_INET,
+      VTCPIP_SOCK_STREAM,
+      VTCPIP_IPPROTO_TCP,
+      "127.0.0.1",
+      12345,
+      NULL, //SoAdSocketIpAddrAssignmentChgNotification
+      NULL //SoAdSocketSoConModeChgNotification
+  };
+
+  /* create socon group */
+  SoAdConGroupHandler_t *soConGr0 = SoAd_CreateSoConGr(&soconGrPar);
+
+  /* create Socon and assigned to Group soConGr0 */
+  PduIdType DoIpTcpConRxPduId = 2; //config
+  PduIdType DoIpTcpConTxPduId = 2; //config
+
+  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 13400, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId);
+
+  SoAd_SoConIdType DoIpTcpConSoConId;
+  SoAd_GetSoConId(DoIpTcpConSoAdTxPduId, &DoIpTcpConSoConId);
+
+  SoAd_OpenSoCon(DoIpTcpConSoConId);
 
   vSchedulerStart();
 

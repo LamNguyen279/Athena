@@ -10,6 +10,7 @@ RM := del
 -include sources.mk
 -include Athesar/Rte/subdir.mk
 -include Athesar/Glue/vOs/subdir.mk
+-include Athesar/Bsw/SoAd/subdir.mk
 -include Athesar/Bsw/subdir.mk
 -include Athesar/App/Boot/subdir.mk
 -include subdir.mk
@@ -47,7 +48,7 @@ all: Athena
 Athena: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++  -o "Athena" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"D:\Athena\Athena\Athesar\Bsw\include" -o "Athena" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

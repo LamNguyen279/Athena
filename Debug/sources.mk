@@ -25,6 +25,7 @@ CPP_DEPS :=
 SUBDIRS := \
 Athesar/App/Boot \
 Athesar/Bsw \
+Athesar/Bsw/SoAd \
 Athesar/Glue/vOs \
 Athesar/Rte \
 

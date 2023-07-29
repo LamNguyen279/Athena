@@ -9,7 +9,7 @@
 #define VOS_H_
 
 #include "vOs_Cfg.h"
-#include "stdio.h"
+#include "Std_Types.h"
 
 #ifndef VOS_NULL
 #define VOS_NULL  NULL
