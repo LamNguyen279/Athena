@@ -75,6 +75,24 @@ typedef enum
   TCPIP_IPADDR_ASSIGNMENT_ALL,
 } TcpIp_IpAddrAssignmentType;
 
+/* @SWS_TCPIP_00082 */
+typedef enum {
+    /**
+     * local IP address is assigned
+     */
+    TCPIP_IPADDR_STATE_ASSIGNED,
+
+    /**
+     * local IP address is assigned, but cannot be used as the network is not active
+     */
+    TCPIP_IPADDR_STATE_ONHOLD,
+
+    /**
+     * local IP address is unassigned
+     */
+    TCPIP_IPADDR_STATE_UNASSIGNED,
+} TcpIp_IpAddrStateType;
+
 typedef struct TcpIp_Config_s TcpIp_ConfigType;
 
 /* ================================ [ DECLARES  ] ============================================== */

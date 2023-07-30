@@ -7,7 +7,7 @@
 #define UNUSED(variable) (void) variable
 #endif
 
-uint32 DoIP_SoAdIfRxIndicationCtn;
+uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
   PduInfoType *PduInfoPtr)
@@ -26,4 +26,14 @@ void DoIP_SoAdIfRxIndication(
   printf("SduDataPtr = %s \n", &buffer);
   fflush(stdout);
   return;
+}
+
+uint32 DoIP_SoConModeChgCtn = 0;
+void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
+{
+  DoIP_SoConModeChgCtn++;
+
+  printf("SoConId = %d \n", SoConId);
+  printf("Mode = %d \n", Mode);
+  fflush(stdout);
 }

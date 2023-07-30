@@ -38,16 +38,6 @@ typedef uint8_t SoAd_MeasurementIdxType;
 
 typedef struct SoAd_Config_s SoAd_ConfigType;
 
-typedef enum _SoAd_W32SocketState_t
-{
-  VTCPIP_SOCK_STATE_INVALID,
-  VTCPIP_SOCK_STATE_NEW,
-  VTCPIP_SOCK_STATE_BIND,
-  VTCPIP_SOCK_STATE_CONNECTED,
-  VTCPIP_SOCK_STATE_LISTENING,
-  VTCPIP_SOCK_STATE_ACCEPTED
-} SoAd_W32SocketState_t;
-
 typedef enum _vTcpIp_SocketType_t
 {
   VTCPIP_SOCK_STREAM = 1,
