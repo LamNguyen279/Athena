@@ -95,8 +95,8 @@ int main()
   vTaskActivate(Task2hdl);
   vTaskActivate(Task3hdl);
 
-  SoAd_SoConGrPar_t soconGrPar = {
-      TRUE, //Server
+  SoAd_SoConGrPar_t soconGr0Par = {
+      FALSE, //Server
       VTCPIP_AF_INET,
       VTCPIP_SOCK_DGRAM,
       VTCPIP_IPPROTO_UDP,
@@ -107,18 +107,44 @@ int main()
   };
 
   /* create socon group */
-  SoAdConGroupHandler_t *soConGr0 = SoAd_CreateSoConGr(&soconGrPar);
+  SoAdConGroupHandler_t *soConGr0 = SoAd_CreateSoConGr(&soconGr0Par);
 
   /* create Socon and assigned to Group soConGr0 */
   PduIdType DoIpTcpConRxPduId = 2; //config
   PduIdType DoIpTcpConTxPduId = 2; //config
 
-  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 13400, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId, SOAD_UPPER_DOIP);
+  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 12345, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId, SOAD_UPPER_DOIP);
 
   SoAd_SoConIdType DoIpTcpConSoConId;
   SoAd_GetSoConId(DoIpTcpConSoAdTxPduId, &DoIpTcpConSoConId);
 
   SoAd_OpenSoCon(DoIpTcpConSoConId);
+
+
+  //test socon 2
+
+  SoAd_SoConGrPar_t soconGr1Par = {
+      TRUE, //Server
+      VTCPIP_AF_INET,
+      VTCPIP_SOCK_STREAM,
+      VTCPIP_IPPROTO_TCP,
+      "127.0.0.1",
+      12345,
+      NULL, //SoAdSocketIpAddrAssignmentChgNotification
+      NULL //SoAdSocketSoConModeChgNotification
+  };
+
+  SoAdConGroupHandler_t *soConGr1 = SoAd_CreateSoConGr(&soconGr1Par);
+
+  PduIdType UpperRxPduId1 = 3; //config
+  PduIdType UpperTxPduId1 = 3; //config
+
+  PduIdType UpperPduId1 = SoAd_CreateSoCon(soConGr1, "127.0.0.2", 23456, &UpperRxPduId1, &UpperTxPduId1, SOAD_UPPER_DOIP);
+
+  SoAd_SoConIdType UpperConSoConId1;
+  SoAd_GetSoConId(UpperPduId1, &UpperConSoConId1);
+
+  SoAd_OpenSoCon(UpperConSoConId1);
 
   vSchedulerStart();
 

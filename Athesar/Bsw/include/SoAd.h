@@ -71,9 +71,21 @@ typedef enum _SoAdUpper_t
   SOAD_UPPER_DOIP
 } SoAdUpper_t;
 
+typedef enum _SoAd_W32SocketState_t
+{
+  _SOAD_SOCK_STATE_INVALID = 0,
+  _SOAD_SOCK_STATE_NEW,
+  _SOAD_SOCK_STATE_BIND,
+  _SOAD_SOCK_STATE_CONNECTING,
+  _SOAD_SOCK_STATE_CONNECTED,
+  _SOAD_SOCK_STATE_LISTENING,
+  _SOAD_SOCK_STATE_ACCEPTED
+} SoAd_W32SocketState_t;
+
 typedef struct _SoAdConGroup_t
 {
   //static socket Group properties
+  boolean IsServer;
   char  LocalAddress[SOAD_IPV4_ADD_SIZE];
   int  AddressLength;
   vTcpIp_SocketAfType_t AfType;
@@ -83,8 +95,8 @@ typedef struct _SoAdConGroup_t
   void *SoAdSocketIpAddrAssignmentChgNotification;
   void *SoAdSocketSoConModeChgNotification;
   // static socket Group protocol properties
-  boolean IsServer;
   //W32 socket
+  SoAd_W32SocketState_t W32SockListenState;
   SOCKET W32SockListen;
 } SoAdConGroupHandler_t;
 

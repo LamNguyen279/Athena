@@ -17,8 +17,15 @@ static void _SoAd_HandleSoConStateNew(SoAd_SoConIdType SoConId);
 static void _SoAd_HandleSoConStateBind(SoAd_SoConIdType SoConId);
 
 static void _SoAd_SocketRxRoutine(SoAd_SoConIdType *SoConId);
+static void _SoAd_SocketConnectRoutine(SoAd_SoConIdType *SoConId);
+static void _SoAd_SocketListenRoutine(SoAdConGroupHandler_t *SoConGr);
+
 static Std_ReturnType _SoAd_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId);
+
+static Std_ReturnType _SoAd_FindMatchAcceptedSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon);
+
+static Std_ReturnType _SoAd_IpCmp(char *s1, char *s2, uint32 size);
 /* ***************************** [ DATAS     ] ****************************** */
 
 //TODO: SoAd Configuration
@@ -28,7 +35,7 @@ SoAd_UpperFncTable_t _SoAd_UpperFunctionTable[] =
         &DoIP_SoAdIfRxIndication, //UpperIfRxIndication
         NULL_PTR, //UpperIfTriggerTransmit
         NULL_PTR, //UpperIfTxConfirmation
-        NULL_PTR, //UpperTpStartOfReception
+        &DoIP_SoAdTpStartOfReception, //UpperTpStartOfReception
         NULL_PTR, //UpperTpCopyRxData
         NULL_PTR, //UpperTpRxIndication
         NULL_PTR, //UpperTpCopyTxData
@@ -50,6 +57,8 @@ SoAdConGroupHandler_t *SoAd_CreateSoConGr(SoAd_SoConGrPar_t *SoConGrPar)
 
   retGr->AfType = SoConGrPar->AfType;
   retGr->IsServer = SoConGrPar->IsServer;
+  retGr->W32SockListen = INVALID_SOCKET;
+  retGr->W32SockListenState = _SOAD_SOCK_STATE_INVALID;
   memcpy(retGr->LocalAddress, SoConGrPar->LocalAddress, SOAD_IPV4_ADD_SIZE);
   retGr->LocalPort = SoConGrPar->LocalPort;
   retGr->ProtocolType = SoConGrPar->Protocol;
@@ -82,6 +91,7 @@ PduIdType SoAd_CreateSoCon(SoAdConGroupHandler_t *AssignedGr,   char  RemoteAddr
   return soAdSock->TxPduId;
 }
 
+/*
 Std_ReturnType _SoAd_OpenUdpSocket(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_OK;
@@ -167,6 +177,7 @@ Std_ReturnType _SoAd_OpenUdpSocket(SoAd_SoConIdType SoConId)
 
   return ret;
 }
+*/
 
 void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
 {
@@ -227,47 +238,86 @@ static void _SoAd_HandleSoConStateBind(SoAd_SoConIdType SoConId)
   DWORD threadId;
   HANDLE threadHdl;
 
-  if(_SOAD_IS_UDP_SOCON(SoConId))
+  if(_SOAD_IS_TCP_SERVER_SOCON(SoConId))
   {
-    //create thread for receive UDP data
-    threadHdl = CreateThread( NULL, 1024,
-              ( LPTHREAD_START_ROUTINE ) _SoAd_SocketRxRoutine,
-              &_SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
-              &threadId );
-
-    if(threadHdl)
+    if(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState == _SOAD_SOCK_STATE_NEW)
     {
-      _SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
-      _SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
+      //TCP server
+      threadHdl = CreateThread( NULL, 1024,
+                ( LPTHREAD_START_ROUTINE ) _SoAd_SocketListenRoutine,
+                _SOAD_GET_SOCON_GROUP(SoConId), CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                &threadId );
 
-      //TODO: state = SOAD_SOCON_RECONNECT for UDP listen only
-      _SOAD_GET_SOCON_FNCTBL(SoConId).UpperSoConModeChg(SoConId, SOAD_SOCON_ONLINE);
-
-      ResumeThread(threadHdl);
+      if(threadHdl)
+      {
+        _SOAD_GET_SOCON_FNCTBL(SoConId).UpperSoConModeChg(SoConId, SOAD_SOCON_RECONNECT);
+        _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_LISTENING;
+        _SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState = _SOAD_SOCK_STATE_LISTENING;
+        ResumeThread(threadHdl);
+      }else
+      {
+        ret = E_NOT_OK;
+      }
     }else
     {
-      WSACleanup();
-      ret = E_NOT_OK;
+      //A thread listening has been created for this group
+      _SOAD_GET_SOCON_FNCTBL(SoConId).UpperSoConModeChg(SoConId, SOAD_SOCON_RECONNECT);
+      _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_LISTENING;
+      _SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState = _SOAD_SOCK_STATE_LISTENING;
+    }
+  }else
+  {
+    if(_SOAD_IS_UDP_SOCON(SoConId))
+    {
+      //create thread for receive UDP data
+      threadHdl = CreateThread( NULL, 1024,
+                ( LPTHREAD_START_ROUTINE ) _SoAd_SocketRxRoutine,
+                &_SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                &threadId );
 
+      if(threadHdl)
+      {
+        _SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
+        _SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
+        //TODO: state = SOAD_SOCON_RECONNECT for UDP listen only
+        _SOAD_GET_SOCON_FNCTBL(SoConId).UpperSoConModeChg(SoConId, SOAD_SOCON_ONLINE);
+        _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_CONNECTED;
+        ResumeThread(threadHdl);
+      }else
+      {
+        ret = E_NOT_OK;
+      }
+
+    }else
+    {
+      //TCP client, create thread for Connect
+      threadHdl = CreateThread( NULL, 1024,
+                ( LPTHREAD_START_ROUTINE ) _SoAd_SocketConnectRoutine,
+                &_SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                &threadId );
+
+      if(threadHdl)
+      {
+        _SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
+        _SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
+        _SOAD_GET_SOCON_FNCTBL(SoConId).UpperSoConModeChg(SoConId, SOAD_SOCON_RECONNECT);
+        _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_CONNECTING;
+        ResumeThread(threadHdl);
+      }else
+      {
+        ret = E_NOT_OK;
+      }
+    }//end check _SOAD_IS_UDP_SOCON
+
+    //cleanup resource for case UDP or TCP client
+    if(ret == E_NOT_OK)
+    {
+      WSACleanup();
       _SoAd_DynSoConArr[SoConId].W32Sock = INVALID_SOCKET;
       _SoAd_DynSoConArr[SoConId].W32Thread.Id = -1;
       _SoAd_DynSoConArr[SoConId].W32Thread.Hdl = NULL_PTR;
     }
-  }else
-  {
-    //TCP
-
-    //server -> listen -> listen routine
-    //client -> connect -> connect routine
-  }
-
-  if(ret == E_OK)
-  {
-    _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_CONNECTED;
-  }else
-  {
-    _SoAd_DynSoConArr[SoConId].W32SockState = _SOAD_SOCK_STATE_INVALID;
-  }
+  }//end check _SOAD_IS_TCP_SERVER_SOCON
 }
 
 static Std_ReturnType _SoAd_CreateSocket(SoAd_SoConIdType SoConId)
@@ -294,7 +344,20 @@ static Std_ReturnType _SoAd_CreateSocket(SoAd_SoConIdType SoConId)
         ret = E_NOT_OK;
     }else
     {
-      _SoAd_DynSoConArr[SoConId].W32Sock = newSock;
+      if(_SOAD_IS_TCP_SERVER_SOCON(SoConId))
+      {
+        //sever group
+        if(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListen == INVALID_SOCKET)
+        {
+          _SOAD_GET_SOCON_GROUP(SoConId)->W32SockListen = newSock;
+          _SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState = _SOAD_SOCK_STATE_NEW;
+        }
+
+      }else
+      {
+        //TCP client or UDP
+        _SoAd_DynSoConArr[SoConId].W32Sock = newSock;
+      }
     }
   }
 
@@ -311,7 +374,7 @@ static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId)
   int iResult;
   WSADATA wsaData;
 
-  struct sockaddr_in service;
+  struct sockaddr_in sockaddr;
 
   // Initialize Winsock
   iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -322,15 +385,32 @@ static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId)
   if(ret != E_NOT_OK)
   {
     // Bind the socket.
-    service.sin_family = SoConGr->AfType;
-    service.sin_addr.s_addr = inet_addr(SoConGr->LocalAddress);
-    service.sin_port = htons(SoConGr->LocalPort);
+    sockaddr.sin_family = SoConGr->AfType;
+    sockaddr.sin_addr.s_addr = inet_addr(SoConGr->LocalAddress);
+    sockaddr.sin_port = htons(SoConGr->LocalPort);
 
-    iResult = bind(thisSoCon->W32Sock, (SOCKADDR *) &service, sizeof (service));
-    if (iResult == SOCKET_ERROR) {
-        closesocket(thisSoCon->W32Sock);
-        WSACleanup();
-        ret = E_NOT_OK;
+    if(_SOAD_IS_TCP_SERVER_SOCON(SoConId))
+    {
+      //sever group
+      if(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState == _SOAD_SOCK_STATE_NEW)
+      {
+        iResult = bind(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListen,
+            (SOCKADDR *) &sockaddr, sizeof (sockaddr));
+        if (iResult == SOCKET_ERROR) {
+            closesocket(thisSoCon->W32Sock);
+            WSACleanup();
+            ret = E_NOT_OK;
+        }
+      }
+    }else
+    {
+      //TCP client or UDP
+      iResult = bind(thisSoCon->W32Sock, (SOCKADDR *) &sockaddr, sizeof (sockaddr));
+      if (iResult == SOCKET_ERROR) {
+          closesocket(thisSoCon->W32Sock);
+          WSACleanup();
+          ret = E_NOT_OK;
+      }
     }
   }
 
@@ -339,9 +419,23 @@ static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId)
 
 void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
 {
+  BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
+  PduLengthType upperBufferSizePtr;
+  PduInfoType pduInfo;
+
   if(_SoAd_DynSoConArr[SoConId].RxLength > 0)
   {
+    if(_SOAD_IS_TCP_SOCON(SoConId))
+    {
+      pduInfo.SduLength = _SoAd_DynSoConArr[SoConId].RxLength;
+      pduInfo.SduDataPtr = _SoAd_DynSoConArr[SoConId].RxBuff;
 
+      upperBufReqRet = _SOAD_GET_SOCON_FNCTBL(SoConId).UpperTpStartOfReception(
+          _SoAd_DynSoConArr[SoConId].UpperRxPduId,
+          &pduInfo, pduInfo.SduLength, &upperBufferSizePtr);
+
+      _SoAd_DynSoConArr[SoConId].RxLength = 0;
+    }
   }
 }
 
@@ -373,11 +467,17 @@ static void _SoAd_SocketRxRoutine(SoAd_SoConIdType *SoConId)
 
       }else if(_SOAD_IS_TCP_SOCON(thisSoConId))
       {
-        thisSoAdSock->RxLength = resultLength;
+        if(resultLength != 0)
+        {
+          thisSoAdSock->RxLength = resultLength;
 
-        memset(thisSoAdSock->RxBuff, 0, SOAD_CFG_SOCON_RX_BUFF_SIZE);
-        memcpy(thisSoAdSock->RxBuff, &rxBuffer[0], resultLength);
-
+          memset(thisSoAdSock->RxBuff, 0, SOAD_CFG_SOCON_RX_BUFF_SIZE);
+          memcpy(thisSoAdSock->RxBuff, &rxBuffer[0], resultLength);
+        }else
+        {
+          //connection lost
+          _SOAD_GET_SOCON_FNCTBL(thisSoConId).UpperSoConModeChg(thisSoConId, SOAD_SOCON_RECONNECT);
+        }
       }else
       {
         //Unknown
@@ -389,17 +489,107 @@ static void _SoAd_SocketRxRoutine(SoAd_SoConIdType *SoConId)
   }
 }
 
-void _SoAd_SocketListenRoutine(SoAd_SoConIdType *SoConId)
+void _SoAd_SocketListenRoutine(SoAdConGroupHandler_t *SoConGr)
 {
-  int resultLength = -1;
+  int iResult;
+  WSADATA wsaData;
 
-  SoAd_SoConIdType thisSoConId = *SoConId;
-  SoAdSock_t *thisSoAdSock = &_SoAd_DynSoConArr[thisSoConId];
+  SOCKADDR_IN addr;
+  int addrlen = sizeof(addr);
+
+  DWORD threadId;
+  HANDLE threadHdl;
+
+  Std_ReturnType ret = E_NOT_OK;
+
+  SoAd_SoConIdType acceptedSoConId;
+  SoAdSock_t *thisSoAdSock;
+
+  SOCKET listenSocket = SoConGr->W32SockListen;
+  SOCKET acceptSocket = INVALID_SOCKET;
+
+  // Initialize WIN32SOCK
+  iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+  if (iResult != NO_ERROR) {
+      return;
+  }
 
   while(1)
   {
+    //LISTEN
+    iResult = listen(listenSocket, 1);
 
+    if (iResult == SOCKET_ERROR)
+    {
+      closesocket(listenSocket);
+      WSACleanup();
+      break;
+    }
+
+    //ACCEPT
+    acceptSocket = accept(listenSocket, (SOCKADDR*)&addr, &addrlen);
+    if (acceptSocket == INVALID_SOCKET)
+    {
+      closesocket(listenSocket);
+      WSACleanup();
+      break;
+    }
+
+    ret = _SoAd_FindMatchAcceptedSocket(&addr, &acceptedSoConId);
+    if(ret == E_OK)
+    {
+
+      thisSoAdSock = &_SoAd_DynSoConArr[acceptedSoConId];
+
+      if(thisSoAdSock->W32SockState == _SOAD_SOCK_STATE_LISTENING)
+      {
+        thisSoAdSock->W32Sock = acceptSocket;
+
+        //create thread for receive client data
+        threadHdl = CreateThread( NULL, 1024,
+                  ( LPTHREAD_START_ROUTINE ) _SoAd_SocketRxRoutine,
+                  &(thisSoAdSock->SoAdSoConId), CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                  &threadId );
+
+        if(threadHdl)
+        {
+          thisSoAdSock->W32Thread.Id = threadId;
+          thisSoAdSock->W32Thread.Hdl = threadHdl;
+
+          _SOAD_GET_SOCON_FNCTBL(acceptedSoConId).UpperSoConModeChg(acceptedSoConId, SOAD_SOCON_ONLINE);
+
+          thisSoAdSock->W32SockState = _SOAD_SOCK_STATE_ACCEPTED;
+          ResumeThread(threadHdl);
+        }else
+        {
+          break;
+          //TODO: handle ?
+        }
+      }
+    }
   }
+}
+
+Std_ReturnType _SoAd_FindMatchAcceptedSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon)
+{
+  SoAd_SoConIdType soconIdx = 0;
+  Std_ReturnType ret = E_NOT_OK;
+
+  char *ip = inet_ntoa(addr->sin_addr);
+  uint32 port =  ntohs(addr->sin_port);
+
+  for(soconIdx = 0; soconIdx < _SoAd_DynSoConArrCtn; soconIdx++)
+  {
+    if((E_OK == _SoAd_IpCmp(&(_SoAd_DynSoConArr[soconIdx].RemoteAddress[0]), ip, SOAD_IPV4_ADD_SIZE)) &&
+        _SoAd_DynSoConArr[soconIdx].RemotePort == port)
+    {
+      *retSocon = soconIdx;
+      ret = E_OK;
+      break;
+    }
+  }
+
+  return ret;
 }
 
 void _SoAd_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
@@ -413,5 +603,26 @@ void _SoAd_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
   {
 
   }
+}
+
+Std_ReturnType _SoAd_IpCmp(char *s1, char *s2, uint32 size)
+{
+  Std_ReturnType ret = E_OK;
+  uint32 idx;
+
+  for(idx = 0; idx < size; idx++)
+  {
+    if(s1[idx] == '\0')
+    {
+      break;
+    }
+
+    if(s1[idx] != s2[idx])
+    {
+      ret = E_NOT_OK;
+      break;
+    }
+  }
+
 }
 /* ***************************** [ FUNCTIONS ] ****************************** */

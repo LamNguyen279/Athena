@@ -29,13 +29,14 @@
 #define _SOAD_GET_SOCON_FNCTBL(SoConId)       (_SoAd_UpperFunctionTable[_SOAD_GET_SOCON_HDL((SoConId)).Upper])
 
 //socket group utilities
-#define _SOAD_GET_SOCON_GROUP(SoConId)        ((SoAdConGroupHandler_t *)(_SoAd_DynSoConArr[(SoConId)].GrAssigned))
+#define _SOAD_GET_SOCON_GROUP(SoConId)        ( (SoAdConGroupHandler_t *)(_SoAd_DynSoConArr[(SoConId)].GrAssigned) )
 #define _SOAD_GET_SOCON_PROTOCOL(SoConId)     (_SOAD_GET_SOCON_GROUP((SoConId))->ProtocolType)
 #define _SOAD_IS_UDP_SOCON(SoConId)           (_SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_UDP)
 #define _SOAD_IS_TCP_SOCON(SoConId)           (_SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_TCP)
+#define _SOAD_IS_TCP_SERVER_SOCON(SoConId)    ( (_SOAD_IS_TCP_SOCON((SoConId)) && _SOAD_GET_SOCON_GROUP((SoConId))->IsServer) )
 
 //Upper call utilities
-#define _SOAD_GET_UPPER_FNCTBL(SoConId)       ()
+
 
 /* ***************************** [ TYPES     ] ****************************** */
 typedef struct _SoAd_UpperFncTable_t
@@ -51,16 +52,6 @@ typedef struct _SoAd_UpperFncTable_t
   void (*UpperSoConModeChg) (SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode);
   void (*LocalIpAddrAssignmentChg) ( SoAd_SoConIdType SoConId, TcpIp_IpAddrStateType State);
 } SoAd_UpperFncTable_t;
-
-typedef enum _SoAd_W32SocketState_t
-{
-  _SOAD_SOCK_STATE_INVALID = 0,
-  _SOAD_SOCK_STATE_NEW,
-  _SOAD_SOCK_STATE_BIND,
-  _SOAD_SOCK_STATE_CONNECTED,
-  _SOAD_SOCK_STATE_LISTENING,
-  _SOAD_SOCK_STATE_ACCEPTED
-} SoAd_W32SocketState_t;
 
 typedef struct _SoAdSock_t
 {
@@ -86,6 +77,7 @@ typedef struct _SoAdSock_t
   PduIdType UpperRxPduId;
   PduIdType UpperConfTxPduId;
 } SoAdSock_t;
+
 /* ***************************** [ DECLARES  ] ****************************** */
 void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId);
 void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId);

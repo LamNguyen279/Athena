@@ -20,6 +20,12 @@ extern void DoIP_SoAdIfRxIndication(
 extern void DoIP_SoConModeChg(
     SoAd_SoConIdType SoConId,
     SoAd_SoConModeType Mode);
+
+extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
+    PduIdType id,
+    PduInfoType *info,
+    PduLengthType TpSduLength,
+    PduLengthType *bufferSizePtr);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */
