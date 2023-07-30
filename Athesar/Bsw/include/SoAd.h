@@ -11,12 +11,13 @@
 extern "C" {
 #endif
 /* ================================ [ MACROS    ] ============================================== */
-#define SOAD_MEAS_DROP_TCP ((SoAd_MeasurementIdxType)0x01)
-#define SOAD_MEAS_DROP_UDP ((SoAd_MeasurementIdxType)0x02)
-#define SOAD_MEAS_ALL ((SoAd_MeasurementIdxType)0x0xFF)
+#define SOAD_IPV4_ADD_SIZE                        15
 
 #define SOAD_CFG_NUM_SOAD_SOCON_GROUP             20
-#define SOAD_CFG_NUM_SOAD_SOCKS         20
+#define SOAD_CFG_NUM_SOAD_SOCKS                   20
+
+#define SOAD_CFG_SOCON_RX_BUFF_SIZE               256
+#define SOAD_CFG_SOCON_TX_BUFF_SIZE               256
 /* ================================ [ TYPES     ] ============================================== */
 /* @SWS_SoAd_00518 */
 typedef uint16_t SoAd_SoConIdType;
@@ -90,9 +91,10 @@ typedef struct _SoAdSock_t
   SOCKET W32Sock;
   SoAd_W32SocketState_t W32SockState;
   char *RxBuff;
+  char *TxBuff;
   uint32_t RxLength;
   void *GrAssigned;
-  char  RemoteAddress[14];
+  char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
   uint32 RemotePort;
   SoAdUpper_t Upper;
   //AUTOSAR
@@ -107,7 +109,7 @@ typedef struct _SoAdSock_t
 typedef struct _SoAdConGroup_t
 {
   //static socket Group properties
-  char  LocalAddress[14];
+  char  LocalAddress[SOAD_IPV4_ADD_SIZE];
   int  AddressLength;
   vTcpIp_SocketAfType_t AfType;
   vTcpIp_SocketType_t SocketType;
@@ -127,7 +129,7 @@ typedef struct _SoAd_SoConGrPar_t
   vTcpIp_SocketAfType_t AfType;
   vTcpIp_SocketType_t SocketType;
   vTcpIp_SocketProtocolType_t Protocol;
-  char  LocalAddress[14];
+  char  LocalAddress[SOAD_IPV4_ADD_SIZE];
   uint32  LocalPort;
   void *SoAdSocketIpAddrAssignmentChgNotification;
   void *SoAdSocketSoConModeChgNotification;

@@ -55,7 +55,7 @@ SoAdConGroupHandler_t *SoAd_CreateSoConGr(SoAd_SoConGrPar_t *SoConGrPar)
 
   retGr->AfType = SoConGrPar->AfType;
   retGr->IsServer = SoConGrPar->IsServer;
-  memcpy(retGr->LocalAddress, SoConGrPar->LocalAddress, 14);
+  memcpy(retGr->LocalAddress, SoConGrPar->LocalAddress, SOAD_IPV4_ADD_SIZE);
   retGr->LocalPort = SoConGrPar->LocalPort;
   retGr->ProtocolType = SoConGrPar->Protocol;
   retGr->SocketType = SoConGrPar->SocketType;
@@ -72,12 +72,13 @@ PduIdType SoAd_CreateSoCon(SoAdConGroupHandler_t *AssignedGr,   char  RemoteAddr
   soAdSock = &_SoAd_DynSoConArr[_SoAd_DynSoConArrCtn];
 
   soAdSock->GrAssigned = AssignedGr;
-  soAdSock->RxBuff = (char *)malloc(255);
+  soAdSock->RxBuff = (char *)malloc(SOAD_CFG_SOCON_RX_BUFF_SIZE);
+  soAdSock->TxBuff = (char *)malloc(SOAD_CFG_SOCON_TX_BUFF_SIZE);
   soAdSock->SoAdSoConId = _SoAd_DynSoConArrCtn;
   soAdSock->W32SockState = VTCPIP_SOCK_STATE_INVALID;
   soAdSock->W32Sock = INVALID_SOCKET;
   soAdSock->TxPduId = _SoAd_DynSoConArrCtn + 1;
-  memcpy(soAdSock->RemoteAddress, &RemoteAddress[0], 14);
+  memcpy(soAdSock->RemoteAddress, &RemoteAddress[0], SOAD_IPV4_ADD_SIZE);
   soAdSock->RemotePort = RemotePort;
   soAdSock->UpperRxPduId = *UpperRxPduId;
   soAdSock->UpperConfTxPduId = *UpperTxPduId;
@@ -280,9 +281,7 @@ static void _SoAd_SocketRoutine(SoAd_SoConIdType *SoConId)
 
   while(1)
   {
-    Sleep(1);
-
-    result = recv(curSoAdSock->W32Sock, curSoAdSock->RxBuff, 255, 0);
+    result = recv(curSoAdSock->W32Sock, curSoAdSock->RxBuff, SOAD_CFG_SOCON_RX_BUFF_SIZE, 0);
 
     if(result > 0)
     {

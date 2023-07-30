@@ -12,7 +12,7 @@ void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
   PduInfoType *PduInfoPtr)
 {
-  char buffer[50];
+  char buffer[256];
 
   memset(&buffer[0], 0, sizeof(buffer));
   memcpy(&buffer[0], PduInfoPtr->SduDataPtr, PduInfoPtr->SduLength);
@@ -23,7 +23,7 @@ void DoIP_SoAdIfRxIndication(
 
   printf("DoIP_SoAdIfRxIndication = %d \n", DoIP_SoAdIfRxIndicationCtn);
   printf("SduLength = %d \n", PduInfoPtr->SduLength);
-  printf("PduInfoPtr->SduDataPtr = %s \n", &buffer);
+  printf("SduDataPtr = %s \n", &buffer);
   fflush(stdout);
   return;
 }
