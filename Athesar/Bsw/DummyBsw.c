@@ -21,7 +21,7 @@ void DoIP_SoAdIfRxIndication(
 
   DoIP_SoAdIfRxIndicationCtn++;
 
-  printf("DoIP_SoAdIfRxIndication = %d \n", DoIP_SoAdIfRxIndicationCtn);
+  printf("DoIP_SoAdIfRxIndication() %d \n", DoIP_SoAdIfRxIndicationCtn);
   printf("RxPduId = %d \n", RxPduId);
   printf("SduLength = %d \n", PduInfoPtr->SduLength);
   printf("SduDataPtr = %s \n", &buffer);
@@ -29,13 +29,18 @@ void DoIP_SoAdIfRxIndication(
   return;
 }
 
+#define SOAD_SOCON_MODE_TO_STR(Mode) \
+    ((Mode == SOAD_SOCON_OFFLINE) ? "SOAD_SOCON_OFFLINE" : \
+        (Mode == SOAD_SOCON_ONLINE) ? "SOAD_SOCON_ONLINE" : "SOAD_SOCON_RECONNECT")
+
 uint32 DoIP_SoConModeChgCtn = 0;
 void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
 {
   DoIP_SoConModeChgCtn++;
 
+  printf("DoIP_SoConModeChg() %d \n", DoIP_SoConModeChgCtn);
   printf("SoConId = %d \n", SoConId);
-  printf("Mode = %d \n", Mode);
+  printf("Mode = %s \n", SOAD_SOCON_MODE_TO_STR(Mode));
   fflush(stdout);
 }
 
@@ -55,7 +60,7 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
 
   buffer[info->SduLength] = "\0";
 
-  printf("DoIP_SoAdTpStartOfReception = %d \n", DoIP_SoAdTpStartOfReceptionCtn);
+  printf("DoIP_SoAdTpStartOfReception() %d \n", DoIP_SoAdTpStartOfReceptionCtn);
   printf("RxPduId = %d \n", id);
   printf("SduLength = %d \n", info->SduLength);
   printf("SduDataPtr = %s \n", &buffer);

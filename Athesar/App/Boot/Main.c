@@ -146,6 +146,21 @@ int main()
 
   SoAd_OpenSoCon(UpperConSoConId1);
 
+
+  //test socon 3
+
+  SoAdConGroupHandler_t *soConGr2 = SoAd_CreateSoConGr(&soconGr1Par);
+
+  PduIdType UpperRxPduId2 = 4; //config
+  PduIdType UpperTxPduId2 = 4; //config
+
+  PduIdType UpperPduId2 = SoAd_CreateSoCon(soConGr1, "127.0.0.2", 34567, &UpperRxPduId2, &UpperTxPduId2, SOAD_UPPER_DOIP);
+
+  SoAd_SoConIdType UpperConSoConId2;
+  SoAd_GetSoConId(UpperPduId2, &UpperConSoConId2);
+
+  SoAd_OpenSoCon(UpperConSoConId2);
+
   vSchedulerStart();
 
   return 0;

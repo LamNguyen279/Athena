@@ -23,7 +23,7 @@ static void _SoAd_SocketListenRoutine(SoAdConGroupHandler_t *SoConGr);
 static Std_ReturnType _SoAd_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId);
 
-static Std_ReturnType _SoAd_FindMatchAcceptedSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon);
+static Std_ReturnType _SoAd_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon);
 
 static Std_ReturnType _SoAd_IpCmp(char *s1, char *s2, uint32 size);
 /* ***************************** [ DATAS     ] ****************************** */
@@ -240,7 +240,7 @@ static void _SoAd_HandleSoConStateBind(SoAd_SoConIdType SoConId)
 
   if(_SOAD_IS_TCP_SERVER_SOCON(SoConId))
   {
-    if(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState == _SOAD_SOCK_STATE_NEW)
+    if(_SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState == _SOAD_SOCK_STATE_BIND)
     {
       //TCP server
       threadHdl = CreateThread( NULL, 1024,
@@ -400,6 +400,9 @@ static Std_ReturnType _SoAd_BindSocket(SoAd_SoConIdType SoConId)
             closesocket(thisSoCon->W32Sock);
             WSACleanup();
             ret = E_NOT_OK;
+        }else
+        {
+          _SOAD_GET_SOCON_GROUP(SoConId)->W32SockListenState = _SOAD_SOCK_STATE_BIND;
         }
       }
     }else
@@ -477,6 +480,11 @@ static void _SoAd_SocketRxRoutine(SoAd_SoConIdType *SoConId)
         {
           //connection lost
           _SOAD_GET_SOCON_FNCTBL(thisSoConId).UpperSoConModeChg(thisSoConId, SOAD_SOCON_RECONNECT);
+
+          thisSoAdSock->W32SockState = _SOAD_SOCK_STATE_LISTENING;
+
+          closesocket(thisSoAdSock->W32Sock);
+          TerminateThread(thisSoAdSock->W32Thread.Hdl, 0);
         }
       }else
       {
@@ -535,7 +543,7 @@ void _SoAd_SocketListenRoutine(SoAdConGroupHandler_t *SoConGr)
       break;
     }
 
-    ret = _SoAd_FindMatchAcceptedSocket(&addr, &acceptedSoConId);
+    ret = _SoAd_FindMatchSocket(&addr, &acceptedSoConId);
     if(ret == E_OK)
     {
 
@@ -570,7 +578,7 @@ void _SoAd_SocketListenRoutine(SoAdConGroupHandler_t *SoConGr)
   }
 }
 
-Std_ReturnType _SoAd_FindMatchAcceptedSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon)
+Std_ReturnType _SoAd_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon)
 {
   SoAd_SoConIdType soconIdx = 0;
   Std_ReturnType ret = E_NOT_OK;
