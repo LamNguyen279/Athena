@@ -81,31 +81,6 @@ typedef enum _SoAdUpper_t
   SOAD_UPPER_DOIP
 } SoAdUpper_t;
 
-typedef struct _SoAdSock_t
-{
-  struct
-  {
-    HANDLE Hdl;
-    DWORD Id;
-  } W32Thread;
-  SOCKET W32Sock;
-  SoAd_W32SocketState_t W32SockState;
-  char *RxBuff;
-  char *TxBuff;
-  uint32_t RxLength;
-  void *GrAssigned;
-  char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
-  uint32 RemotePort;
-  SoAdUpper_t Upper;
-  //AUTOSAR
-  uint32 RequestMask;
-  SoAd_SoConIdType SoAdSoConId;
-  SoAd_SoConModeType SoAdSoConState;
-  PduIdType TxPduId;
-  PduIdType UpperRxPduId;
-  PduIdType UpperConfTxPduId;
-} SoAdSock_t;
-
 typedef struct _SoAdConGroup_t
 {
   //static socket Group properties

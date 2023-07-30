@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Athesar/Bsw/SoAd/SoAd.c 
+../Athesar/Bsw/SoAd/SoAd.c \
+../Athesar/Bsw/SoAd/SoAd_Priv.c 
 
 OBJS += \
-./Athesar/Bsw/SoAd/SoAd.o 
+./Athesar/Bsw/SoAd/SoAd.o \
+./Athesar/Bsw/SoAd/SoAd_Priv.o 
 
 C_DEPS += \
-./Athesar/Bsw/SoAd/SoAd.d 
+./Athesar/Bsw/SoAd/SoAd.d \
+./Athesar/Bsw/SoAd/SoAd_Priv.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
