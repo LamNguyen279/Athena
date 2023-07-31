@@ -6,6 +6,7 @@
  */
 
 /* ***************************** [ INCLUDES  ] ****************************** */
+#include "SoAd_Ram.h"
 #include "SoAd.h"
 #include "SoAd_Priv.h"
 /* ***************************** [ MACROS    ] ****************************** */
@@ -21,7 +22,7 @@ void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
 
 void SoAd_MainFunction(void)
 {
-  for(SoAd_SoConIdType SoConId = 0; SoConId < _SoAd_DynSoConArrCtn; SoConId ++)
+  for(SoAd_SoConIdType SoConId = 0; SoConId < SoAd_DynSoConArrCtn; SoConId ++)
   {
     _SoAd_HandleSoConState(SoConId);
 
@@ -45,11 +46,11 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
 
   Std_ReturnType ret = E_NOT_OK;
 
-  for(int idx = 0; idx < _SoAd_DynSoConArrCtn; idx++)
+  for(int idx = 0; idx < SoAd_DynSoConArrCtn; idx++)
   {
-    if(_SoAd_DynSoConArr[idx].TxPduId == TxPduId)
+    if(SoAd_DynSoConArr[idx].TxPduId == TxPduId)
     {
-      *SoConIdPtr = _SoAd_DynSoConArr[idx].SoAdSoConId;
+      *SoConIdPtr = SoAd_DynSoConArr[idx].SoAdSoConId;
       break;
     }
   }

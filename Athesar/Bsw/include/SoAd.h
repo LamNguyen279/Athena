@@ -12,12 +12,6 @@ extern "C" {
 #endif
 /* ================================ [ MACROS    ] ============================================== */
 #define SOAD_IPV4_ADD_SIZE                        15
-
-#define SOAD_CFG_NUM_SOAD_SOCON_GROUP             20
-#define SOAD_CFG_NUM_SOAD_SOCKS                   20
-
-#define SOAD_CFG_SOCON_RX_BUFF_SIZE               256
-#define SOAD_CFG_SOCON_TX_BUFF_SIZE               256
 /* ================================ [ TYPES     ] ============================================== */
 /* @SWS_SoAd_00518 */
 typedef uint16_t SoAd_SoConIdType;
@@ -38,87 +32,10 @@ typedef uint8_t SoAd_MeasurementIdxType;
 
 typedef struct SoAd_Config_s SoAd_ConfigType;
 
-typedef enum _vTcpIp_SocketType_t
-{
-  VTCPIP_SOCK_STREAM = 1,
-  VTCPIP_SOCK_DGRAM = 2
-} vTcpIp_SocketType_t;
-
-typedef enum _vTcpIp_SocketAfType_t
-{
-  VTCPIP_AF_INET = 2,
-  VTCPIP_AF_INET6 = 23
-} vTcpIp_SocketAfType_t;
-
-typedef enum _vTcpIp_SocketProtocolType_t
-{
-  VTCPIP_IPPROTO_TCP = 6,
-  VTCPIP_IPPROTO_UDP = 17
-} vTcpIp_SocketProtocolType_t;
-
-typedef struct _vTcpIp_SocketPar_t
-{
-  vTcpIp_SocketAfType_t AfType;
-  vTcpIp_SocketType_t SocketType;
-  vTcpIp_SocketProtocolType_t Protocol;
-  uint32_t Port;
-
-} vTcpIp_SocketPar_t;
-
-typedef enum _SoAdUpper_t
-{
-  SOAD_UPPER_INVALID = -1,
-  SOAD_UPPER_DOIP
-} SoAdUpper_t;
-
-typedef enum _SoAd_W32SocketState_t
-{
-  _SOAD_SOCK_STATE_INVALID = 0,
-  _SOAD_SOCK_STATE_NEW,
-  _SOAD_SOCK_STATE_BIND,
-  _SOAD_SOCK_STATE_CONNECTING,
-  _SOAD_SOCK_STATE_CONNECTED,
-  _SOAD_SOCK_STATE_LISTENING,
-  _SOAD_SOCK_STATE_ACCEPTED
-} SoAd_W32SocketState_t;
-
-typedef struct _SoAdConGroup_t
-{
-  //static socket Group properties
-  boolean IsServer;
-  char  LocalAddress[SOAD_IPV4_ADD_SIZE];
-  int  AddressLength;
-  vTcpIp_SocketAfType_t AfType;
-  vTcpIp_SocketType_t SocketType;
-  vTcpIp_SocketProtocolType_t ProtocolType;
-  uint32 LocalPort;
-  void *SoAdSocketIpAddrAssignmentChgNotification;
-  void *SoAdSocketSoConModeChgNotification;
-  // static socket Group protocol properties
-  //W32 socket
-  SoAd_W32SocketState_t W32SockListenState;
-  SOCKET W32SockListen;
-} SoAdConGroupHandler_t;
-
-typedef struct _SoAd_SoConGrPar_t
-{
-  boolean IsServer;
-  vTcpIp_SocketAfType_t AfType;
-  vTcpIp_SocketType_t SocketType;
-  vTcpIp_SocketProtocolType_t Protocol;
-  char  LocalAddress[SOAD_IPV4_ADD_SIZE];
-  uint32  LocalPort;
-  void *SoAdSocketIpAddrAssignmentChgNotification;
-  void *SoAdSocketSoConModeChgNotification;
-} SoAd_SoConGrPar_t;
 /* ================================ [ DECLARES  ] ============================================== */
 /* ================================ [ DATAS     ] ============================================== */
 /* ================================ [ LOCALS    ] ============================================== */
 /* ================================ [ FUNCTIONS ] ============================================== */
-
-/*  */
-extern SoAdConGroupHandler_t *SoAd_CreateSoConGr(SoAd_SoConGrPar_t *SoConGrPar);
-extern PduIdType SoAd_CreateSoCon(SoAdConGroupHandler_t *AssignedGr,   char  RemoteAddress[], uint32 RemotePort, PduIdType *UpperRxPduId, PduIdType *UpperTxPduId, SoAdUpper_t Upper);
 
 /* @SWS_SoAd_00093 */
 void SoAd_Init(const SoAd_ConfigType *ConfigPtr);
