@@ -23,7 +23,7 @@ extern void DoIP_SoConModeChg(
 
 extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
     PduIdType id,
-    PduInfoType *info,
+    const PduInfoType *info,
     PduLengthType TpSduLength,
     PduLengthType *bufferSizePtr);
 /* ***************************** [ DATAS     ] ****************************** */

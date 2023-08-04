@@ -47,7 +47,7 @@ void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
 uint32 DoIP_SoAdTpStartOfReceptionCtn = 0;
 extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
     PduIdType id,
-    PduInfoType *info,
+    const PduInfoType *info,
     PduLengthType TpSduLength,
     PduLengthType *bufferSizePtr)
 {

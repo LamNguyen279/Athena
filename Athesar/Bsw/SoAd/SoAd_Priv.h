@@ -2,7 +2,12 @@
  * SoAd_Priv.h
  *
  *  Created on: Jul 30, 2023
- *      Author: ADMIN
+ *      Author: lam nguyen
+ *
+               /\_/\   /\_/\
+              ( o.o ) ( o.o )
+               > ^ <   > ^ <
+ *
  */
 
 #ifndef SOAD_SOAD_PRIV_H_
@@ -22,7 +27,12 @@
 #define SOAD_TRUE                   STD_ON
 #define SOAD_FALSE                  STD_OFF
 
-#define SOAD_INVALID_PDU_HEADER     -1
+#define SOAD_INVALID_PDU_HEADER     ((uint32)-1)
+#define SOAD_INVALID_SOCON_GROUP    ((uint32)-1)
+#define SOAD_INVALID_ROUT_GROUP     ((uint32)-1)
+#define SOAD_INVALID_SOCON          ((SoAd_SoConIdType)-1)
+
+#define SOAD_RAISE_DEV_ERROR(ApiId, ErrorId)
 
 //socket utilities
 #define _SOAD_SOCCON_REQMASK_OPEN   1
@@ -128,13 +138,11 @@ typedef struct _SoAdRoutingGroup_t
 
 typedef struct _SoAd_PduRouteDest_t
 {
-  uint32 SoAdPduRouteIdx;
   uint32 SoAdTxPduHeaderId;
   uint8 SoAdTxUdpTriggerMode;
-  uint32 SoAdTxRoutingGroupBase;
-  uint32 SoAdTxRoutingGroupCtn;
-  SoAd_SoConIdType SoAdTxSoConIdBase;
-  SoAd_SoConIdType SoAdTxSoConIdCtn;
+  uint32 SoAdTxRoutingGroupIdx;
+  uint32 SoAdTxSoConGrIdx;
+  SoAd_SoConIdType SoAdTxSoConIdx;
 } SoAd_CfgPduRouteDest_t;
 
 /* PduRoute , TODO: generate to one array */
@@ -151,6 +159,7 @@ typedef struct _SoAd_CfgPduRoute_t
 /* SocketConnectionGroup, TODO: Generate to one array */
 typedef struct _SoAd_CfgSoConGrp_t
 {
+  SoAd_Upper_t SoAdUpperLayer;
   boolean SoAdPduHeaderEnable;
   boolean SoAdSocketAutomaticSoConSetup;
   boolean SoAdSocketFramePriority;
@@ -194,10 +203,13 @@ typedef struct _SoAd_CfgSocketRoute_t
 typedef struct _SoAd_SoCon_t
 {
   /* SoAdSocketId -> Index of array */
-  sint8 SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE];
-  uint32 SoAdSocketRemotePort;
-  uint32 SoConGrIdx;
-  uint32 SocketRouteIdx;
+  sint8 SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE]; /* remote address */
+  uint32 SoAdSocketRemotePort; /* remote port */
+  uint32 SoConGrIdx; /* get local SoCon Group properties by this Id */
+  const uint32 *PduRouteDestList; /* holds all PduRouteDest that refer to this SoCon */
+  const uint32 PduRouteDestListSize; /* PduRouteDestReferredListCtn */
+  const uint32 *SocketRouteDestList;  /* holds all Socket RouteDest that refer to this SoCon */
+  const uint32 SocketRouteDestListSize; /* SocketRouteDestReferredListCtn */
 } SoAd_CfgSoCon_t;
 
 //runtime type

@@ -30,27 +30,27 @@ SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
     }
 };
 
-SoAd_CfgSoConGrPar_t soconGr0Par = {
-    FALSE, //Server
-    VTCPIP_AF_INET,
-    VTCPIP_SOCK_DGRAM,
-    VTCPIP_IPPROTO_UDP,
-    "127.0.0.1",
-    12345,
-    NULL, //SoAdSocketIpAddrAssignmentChgNotification
-    NULL //SoAdSocketSoConModeChgNotification
-};
-
-SoAd_CfgSoConGrPar_t soconGr1Par = {
-    TRUE, //Server
-    VTCPIP_AF_INET,
-    VTCPIP_SOCK_STREAM,
-    VTCPIP_IPPROTO_TCP,
-    "127.0.0.1",
-    12345,
-    NULL, //SoAdSocketIpAddrAssignmentChgNotification
-    NULL //SoAdSocketSoConModeChgNotification
-};
+//SoAd_CfgSoConGrPar_t soconGr0Par = {
+//    FALSE, //Server
+//    VTCPIP_AF_INET,
+//    VTCPIP_SOCK_DGRAM,
+//    VTCPIP_IPPROTO_UDP,
+//    "127.0.0.1",
+//    12345,
+//    NULL, //SoAdSocketIpAddrAssignmentChgNotification
+//    NULL //SoAdSocketSoConModeChgNotification
+//};
+//
+//SoAd_CfgSoConGrPar_t soconGr1Par = {
+//    TRUE, //Server
+//    VTCPIP_AF_INET,
+//    VTCPIP_SOCK_STREAM,
+//    VTCPIP_IPPROTO_TCP,
+//    "127.0.0.1",
+//    12345,
+//    NULL, //SoAdSocketIpAddrAssignmentChgNotification
+//    NULL //SoAdSocketSoConModeChgNotification
+//};
 
 const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
 {
@@ -78,23 +78,27 @@ const SoAd_CfgPduRouteDest_t SoAd_PduRouteDestArr[] =
 {
     /* PduRouteDest 0 */
     {
-        0,/* SoAdPduRouteIdx */
         SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
         SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
-        0,/* SoAdTxRoutingGroupBase */
-        1,/* SoAdTxRoutingGroupCtn */
-        0,/* SoAdTxSoConIdBase */
-        1,/* SoAdTxSoConIdCtn */
+        0,/* SoAdTxRoutingGroupIdx */
+        SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
+        0,/* SoAdTxSoConIdx */
     },
     /* PduRouteDest 1 */
     {
-        0,/* SoAdPduRouteIdx */
         SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
         SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
-        0,/* SoAdTxRoutingGroupBase */
-        1,/* SoAdTxRoutingGroupCtn */
-        1,/* SoAdTxSoConIdBase */
-        2,/* SoAdTxSoConIdCtn */
+        1,/* SoAdTxRoutingGroupIdx */
+        SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
+        1,/* SoAdTxSoConIdx */
+    },
+    /* PduRouteDest 2 */
+    {
+        SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
+        SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
+        1,/* SoAdTxRoutingGroupIdx */
+        SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
+        2,/* SoAdTxSoConIdx */
     }
 };
 const uint32 SoAd_PduRouteDestArrSize = SOAD_GET_ARRAY_SIZE(SoAd_PduRouteDestArr);
@@ -119,6 +123,7 @@ const uint32 SoAd_RoutingGroupArrSize = SOAD_GET_ARRAY_SIZE(SoAd_RoutingGroupArr
 const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[] =
 {
     {
+        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
         SOAD_FALSE,/* SoAdPduHeaderEnable */
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
@@ -134,6 +139,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[] =
         "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
     {
+        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
         SOAD_FALSE,/* SoAdPduHeaderEnable */
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
@@ -152,25 +158,46 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[] =
 const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrpArr);
 
 
+static const uint32 SoAdSoCon0_PduRouteDestList[1]={0};
+static const uint32 SoAdSoCon0_SocketRouteDestList[1]={0};
+
+static const uint32 SoAdSoCon1_PduRouteDestList[1]={1};
+static const uint32 SoAdSoCon1_SocketRouteDestList[1]={1};
+
+static const uint32 SoAdSoCon2_PduRouteDestList[1]={2};
+static const uint32 SoAdSoCon2_SocketRouteDestList[1]={2};
+
 const SoAd_CfgSoCon_t SoAd_SoConArr[] =
 {
+    /* SoAdSoCon0 */
     {
-        "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
+        "127.0.0.2", /* SoAdSocketRemoteIpAddress */
         20000,/* SoAdSocketRemotePort */
         0, /* SoConGrIdx */
-        0, /* SocketRouteIdx */
+        &SoAdSoCon0_PduRouteDestList[0], /* PduRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon0_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon0_SocketRouteDestList[0], /* SocketRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon0_SocketRouteDestList), /* SocketRouteDestListSize */
     },
+    /* SoAdSoCon1 */
     {
         "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
         20001,/* SoAdSocketRemotePort */
         1, /* SoConGrIdx */
-        0, /* SocketRouteIdx */
+        &SoAdSoCon1_PduRouteDestList[0], /* PduRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon1_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon1_SocketRouteDestList[0], /* SocketRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon1_SocketRouteDestList), /* SocketRouteDestListSize */
     },
+    /* SoAdSoCon2 */
     {
         "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
         20002,/* SoAdSocketRemotePort */
         1, /* SoConGrIdx */
-        0, /* SocketRouteIdx */
+        &SoAdSoCon2_PduRouteDestList[0], /* PduRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon2_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon2_SocketRouteDestList[0], /* SocketRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon2_SocketRouteDestList), /* SocketRouteDestListSize */
     }
 };
 const uint32 SoAd_SoConArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConArr);
