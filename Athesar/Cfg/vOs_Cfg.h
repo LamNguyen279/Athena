@@ -18,7 +18,7 @@
 //#define VOS_CFG_DEBUG_ENABLED
 
 /* Define Event */
-#define vOsEvent0      1
+#define OsEvent_BswMainFunction_10ms      1
 #define vOsEvent1      2
 
 #endif /* VOS_CFG_H_ */

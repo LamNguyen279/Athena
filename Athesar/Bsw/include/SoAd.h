@@ -30,7 +30,10 @@ typedef uint16_t SoAd_RoutingGroupIdType;
 /* @SWS_SoAd_91010 */
 typedef uint8_t SoAd_MeasurementIdxType;
 
-typedef struct SoAd_Config_s SoAd_ConfigType;
+typedef struct _SoAd_ConfigType
+{
+  uint8 NoThing_0_0_;
+} SoAd_ConfigType;
 
 /* ================================ [ DECLARES  ] ============================================== */
 /* ================================ [ DATAS     ] ============================================== */

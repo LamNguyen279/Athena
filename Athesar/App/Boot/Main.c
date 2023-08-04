@@ -4,81 +4,60 @@
 
 #include "SoAd.h"
 
-vTaskHandler_t *Task0hdl, *Task1hdl, *Task2hdl, *Task3hdl;
+vTaskHandler_t *PostOsStartupTask;
+vTaskHandler_t *BswMainTask_10ms;
+vTaskHandler_t *Task_1ms;
 
 void OsIdleHook()
 {
   static int a;
   a++;
 
-  if(a % 10 == 0)
-  {
-    vTaskActivate(Task2hdl); //A
-    vEventSet(Task3hdl, vOsEvent0);
-    vEventSet(Task3hdl, vOsEvent1);
-  }
-
 }
 
-void task0(void)
+
+void OsTask_BswMain_10ms(void)
 {
-  uint32_t a = 1;
+  vEventMask_t OsTask_BswMain_10msMask;
 
-  for(a = 0; a < 10000; a++) //B
-  {
+  SoAd_OpenSoCon(0);
 
-  }
+  SoAd_OpenSoCon(1);
 
-  vTaskTerminate();  //C
-}
-
-void task1(void)
-{
-  uint32_t a = 1;
-
-  vTaskActivate(Task0hdl); //D
-
-  for(a = 0; a < 100000; a++)
-  {
-
-  }
-
-  vTaskTerminate(); //E
-}
-
-uint32_t b = 0;
-void task2(void)
-{
-  vTaskActivate(Task1hdl); //F
-
-  SoAd_MainFunction();
-
-  vTaskTerminate(); //G
-}
-
-void task3(void)
-{
-  uint32_t task3Ctn = 0;
-  vEventMask_t task3EventMask;
-
+  SoAd_OpenSoCon(2);
 
   while(1)
   {
-    vEventWait( vOsEvent0 | vOsEvent1 );
-    vEventGet( Task3hdl, &task3EventMask );
+    vEventWait( OsEvent_BswMainFunction_10ms );
+    vEventGet( BswMainTask_10ms, &OsTask_BswMain_10msMask );
 
-    if((task3EventMask & vOsEvent0) == vOsEvent0)
+    if((OsTask_BswMain_10msMask & OsEvent_BswMainFunction_10ms) == OsEvent_BswMainFunction_10ms)
     {
-      vEventClear(vOsEvent0);
-      task3Ctn++;
-    }
+      vEventClear(OsEvent_BswMainFunction_10ms);
 
-    if((task3EventMask & vOsEvent1) == vOsEvent1)
-    {
-      vEventClear(vOsEvent1);
-      task3Ctn++;
+      SoAd_MainFunction();
     }
   }
+}
+
+
+void OsTask_1ms(void)
+{
+  while(1)
+  {
+    vTaskTicksDelay(10);
+    vEventSet( BswMainTask_10ms, OsEvent_BswMainFunction_10ms );
+  }
+}
+
+void OsTask_PostOsStartup(void)
+{
+  SoAd_Init(NULL);
+
+  vTaskActivate(Task_1ms);
+  vTaskActivate(BswMainTask_10ms);
+
+  vTaskTerminate();
 }
 
 int main()
@@ -86,59 +65,15 @@ int main()
 
   vTaskInit();
   vSchedulerInit();
-                        // entry, prio, Preempt policy
-  Task0hdl = vTaskCreate(task0, 4, VTASK_PREEMP_FULL);
-  Task1hdl = vTaskCreate(task1, 3, VTASK_PREEMP_NON);
-  Task2hdl = vTaskCreate(task2, 1, VTASK_PREEMP_NON);
-  Task3hdl = vTaskCreate(task3, 2, VTASK_PREEMP_NON);
-
-  vTaskActivate(Task2hdl);
-  vTaskActivate(Task3hdl);
-
-  /* create socon group */
-//  SoAdConGroupHandler_t *soConGr0 = SoAd_CreateSoConGr(&soconGr0Par);
-
-  /* create Socon and assigned to Group soConGr0 */
-//  PduIdType DoIpTcpConRxPduId = 2; //config
-//  PduIdType DoIpTcpConTxPduId = 2; //config
-
-//  PduIdType DoIpTcpConSoAdTxPduId = SoAd_CreateSoCon(soConGr0, "127.0.0.2", 12345, &DoIpTcpConRxPduId, &DoIpTcpConTxPduId, SOAD_UPPER_DOIP);
-
-//  SoAd_SoConIdType DoIpTcpConSoConId;
-//  SoAd_GetSoConId(DoIpTcpConSoAdTxPduId, &DoIpTcpConSoConId);
-//
-//  SoAd_OpenSoCon(DoIpTcpConSoConId);
 
 
-  //test socon 2
+  PostOsStartupTask = vTaskCreate(OsTask_PostOsStartup, 255, VTASK_PREEMP_NON);
 
+  BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_NON);
 
-//  SoAdConGroupHandler_t *soConGr1 = SoAd_CreateSoConGr(&soconGr1Par);
-//
-//  PduIdType UpperRxPduId1 = 3; //config
-//  PduIdType UpperTxPduId1 = 3; //config
-//
-//  PduIdType UpperPduId1 = SoAd_CreateSoCon(soConGr1, "127.0.0.2", 23456, &UpperRxPduId1, &UpperTxPduId1, SOAD_UPPER_DOIP);
-//
-//  SoAd_SoConIdType UpperConSoConId1;
-//  SoAd_GetSoConId(UpperPduId1, &UpperConSoConId1);
-//
-//  SoAd_OpenSoCon(UpperConSoConId1);
+  Task_1ms = vTaskCreate(OsTask_1ms, 5, VTASK_PREEMP_FULL);
 
-
-  //test socon 3
-
-//  SoAdConGroupHandler_t *soConGr2 = SoAd_CreateSoConGr(&soconGr1Par);
-//
-//  PduIdType UpperRxPduId2 = 4; //config
-//  PduIdType UpperTxPduId2 = 4; //config
-//
-//  PduIdType UpperPduId2 = SoAd_CreateSoCon(soConGr1, "127.0.0.2", 34567, &UpperRxPduId2, &UpperTxPduId2, SOAD_UPPER_DOIP);
-//
-//  SoAd_SoConIdType UpperConSoConId2;
-//  SoAd_GetSoConId(UpperPduId2, &UpperConSoConId2);
-//
-//  SoAd_OpenSoCon(UpperConSoConId2);
+  vTaskActivate(PostOsStartupTask);
 
   vSchedulerStart();
 

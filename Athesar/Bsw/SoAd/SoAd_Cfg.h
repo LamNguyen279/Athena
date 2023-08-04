@@ -16,7 +16,7 @@
 
 #define SOAD_CFG_NUM_ROUTING_GROUP                    10
 
-#define SOAD_CFG_NUM_SOCON                            20
+#define SOAD_CFG_NUM_SOCON                            3 //SoAd_SoConArrSize
 
 #define SOAD_CFG_SOCON_RX_BUFF_SIZE                   256
 
@@ -46,7 +46,7 @@ extern const uint32 SoAd_PduRouteDestArrSize;
 extern const SoAd_CfgRoutingGroup_t SoAd_RoutingGroupArr[];
 extern const uint32 SoAd_RoutingGroupArrSize;
 
-extern const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[];
+extern const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[];
 extern const uint32 SoAd_SoConGrpArrSize;
 
 extern const SoAd_CfgSoCon_t SoAd_SoConArr[];

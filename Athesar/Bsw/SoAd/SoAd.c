@@ -17,12 +17,31 @@
 /* ***************************** [ FUNCTIONS ] ****************************** */
 void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
 
+  SoAd_SoConIdType soConId = 0;
+  uint32 soConGr = 0;
+
+  SOAD_UNUSED(ConfigPtr);
+
+  /* Initialize Dynamic SoCon Array */
+  while(soConId < SoAd_SoConArrSize)
+  {
+    _SoAd_InitSocon(soConId);
+    soConId++;
+  }
+
+  /* Initialize Dynamic SoConGr Array */
+  while(soConGr < SoAd_SoConGrpArrSize)
+  {
+    _SoAd_InitSoConGroup(soConGr);
+    soConGr++;
+  }
+
 }
 
 
 void SoAd_MainFunction(void)
 {
-  for(SoAd_SoConIdType SoConId = 0; SoConId < SoAd_DynSoConArrCtn; SoConId ++)
+  for(SoAd_SoConIdType SoConId = 0; SoConId < SoAd_SoConArrSize; SoConId ++)
   {
     _SoAd_HandleSoConState(SoConId);
 
@@ -50,7 +69,7 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
   {
     if(SoAd_DynSoConArr[idx].TxPduId == TxPduId)
     {
-      *SoConIdPtr = SoAd_DynSoConArr[idx].SoAdSoConId;
+      *SoConIdPtr = SoAd_DynSoConArr[idx].W32SoAdSoConId;
       break;
     }
   }
@@ -81,9 +100,9 @@ Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *
 Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
   Std_ReturnType ret = E_OK;;
 
-  if(!_SOAD_CHECK_SOCON_REQMASK(SoConId, _SOAD_SOCCON_REQMASK_OPEN))
+  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
   {
-    _SOAD_SET_SOCON_REQMASK(SoConId, _SOAD_SOCCON_REQMASK_OPEN);
+    SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
   }
 
   return ret;
@@ -91,6 +110,12 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
 
 Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   Std_ReturnType ret = E_NOT_OK;
+
+  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE))
+  {
+    SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
+    SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
+  }
 
 
   return ret;

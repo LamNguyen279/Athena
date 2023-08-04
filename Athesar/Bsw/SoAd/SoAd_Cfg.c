@@ -14,7 +14,7 @@
 /* ***************************** [ DECLARES  ] ****************************** */
 /* ***************************** [ DATAS     ] ****************************** */
 
-SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
+const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
 {
     {
         &DoIP_SoAdIfRxIndication, //UpperIfRxIndication
@@ -59,6 +59,7 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         1, /* SoAdTxPduRef */
         SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_DOIP, /* upper layer */
         0, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */
     },
@@ -67,7 +68,17 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         2, /* SoAdTxPduRef */
         SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_DOIP, /* upper layer */
         1, /* SoAdPduRouteDestBase */
+        1, /* SoAdPduRouteDestCtn */
+    },
+    /* PduRoute 2 */
+    {
+        SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
+        3, /* SoAdTxPduRef */
+        SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_DOIP, /* upper layer */
+        2, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */
     },
 };
@@ -80,7 +91,8 @@ const SoAd_CfgPduRouteDest_t SoAd_PduRouteDestArr[] =
     {
         SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
         SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
-        0,/* SoAdTxRoutingGroupIdx */
+        0,/* SoAdTxRoutingGroupBase */
+        1,/* SoAdTxRoutingGroupCtn */
         SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
         0,/* SoAdTxSoConIdx */
     },
@@ -88,7 +100,8 @@ const SoAd_CfgPduRouteDest_t SoAd_PduRouteDestArr[] =
     {
         SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
         SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
-        1,/* SoAdTxRoutingGroupIdx */
+        1,/* SoAdTxRoutingGroupBase */
+        1,/* SoAdTxRoutingGroupCtn */
         SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
         1,/* SoAdTxSoConIdx */
     },
@@ -96,7 +109,8 @@ const SoAd_CfgPduRouteDest_t SoAd_PduRouteDestArr[] =
     {
         SOAD_INVALID_PDU_HEADER,/* SoAdTxPduHeaderId */
         SOAD_TRIGGER_ALWAYS,/* SoAdTxUdpTriggerMode */
-        1,/* SoAdTxRoutingGroupIdx */
+        1,/* SoAdTxRoutingGroupBase */
+        1,/* SoAdTxRoutingGroupCtn */
         SOAD_INVALID_SOCON_GROUP,/* SoAdTxSoConGrIdx */
         2,/* SoAdTxSoConIdx */
     }
@@ -115,12 +129,17 @@ const SoAd_CfgRoutingGroup_t SoAd_RoutingGroupArr[] =
     {
         SOAD_TRUE,/* IsEnabledAtInit */
         SOAD_TRUE,/* TxTriggerable */
+    },
+    /* RoutingGroup 2 */
+    {
+        SOAD_TRUE,/* IsEnabledAtInit */
+        SOAD_TRUE,/* TxTriggerable */
     }
 };
 const uint32 SoAd_RoutingGroupArrSize = SOAD_GET_ARRAY_SIZE(SoAd_RoutingGroupArr);
 
 
-const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[] =
+const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 {
     {
         SOAD_UPPER_DOIP, /*SoAdUpperLayer */
@@ -155,7 +174,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrpArr[] =
         "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
 };
-const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrpArr);
+const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrArr);
 
 
 static const uint32 SoAdSoCon0_PduRouteDestList[1]={0};
@@ -212,6 +231,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
         1, /* SoAdRxPduRef */
         0, /* SoAdRxRoutingGroupBase */
         1, /* SoAdRxRoutingGroupCtn */
+        SOAD_UPPER_DOIP,
     },
     {
         SOAD_FALSE,/* SoAdRxPduHeaderId */
@@ -220,6 +240,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
         2, /* SoAdRxPduRef */
         0, /* SoAdRxRoutingGroupBase */
         1, /* SoAdRxRoutingGroupCtn */
+        SOAD_UPPER_DOIP,
     },
     {
         SOAD_FALSE,/* SoAdRxPduHeaderId */
@@ -228,6 +249,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
         3, /* SoAdRxPduRef */
         0, /* SoAdRxRoutingGroupBase */
         1, /* SoAdRxRoutingGroupCtn */
+        SOAD_UPPER_DOIP,
     }
 };
 const uint32 SoAd_CfgSocketRouteArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SocketRouteArr);
