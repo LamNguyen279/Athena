@@ -42,6 +42,11 @@ void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
   printf("SoConId = %d \n", SoConId);
   printf("Mode = %s \n", SOAD_SOCON_MODE_TO_STR(Mode));
   fflush(stdout);
+
+  if(SoConId == 2 && Mode == SOAD_SOCON_OFFLINE)
+  {
+    SoAd_OpenSoCon(2);
+  }
 }
 
 uint32 DoIP_SoAdTpStartOfReceptionCtn = 0;

@@ -65,15 +65,6 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
 
   Std_ReturnType ret = E_NOT_OK;
 
-  for(int idx = 0; idx < SoAd_DynSoConArrCtn; idx++)
-  {
-    if(SoAd_DynSoConArr[idx].TxPduId == TxPduId)
-    {
-      *SoConIdPtr = SoAd_DynSoConArr[idx].W32SoAdSoConId;
-      break;
-    }
-  }
-
   return ret;
 }
 

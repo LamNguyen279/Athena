@@ -35,6 +35,8 @@
 #define SOAD_CFG_VERSIONINFO_API                      STD_OFF
 
 #define SOAD_CFG_PDUHEADER_BYTE_ORDER                 SOAD_BIG_ENDIAN
+
+#define SOAD_CFG_TCP_CLT_TX_SYNC_DELAY_MS             500
 /* ***************************** [ TYPES     ] ****************************** */
 /* ***************************** [ DECLARES  ] ****************************** */
 extern const SoAd_CfgPduRoute_t SoAd_PduRouteArr[];

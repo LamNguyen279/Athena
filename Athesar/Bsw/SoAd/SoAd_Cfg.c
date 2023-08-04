@@ -173,18 +173,34 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         VTCPIP_IPPROTO_TCP, /* W32ProtocolType */
         "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
+    {
+        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
+        SOAD_FALSE,/* SoAdPduHeaderEnable */
+        SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
+        5,/* SoAdSocketFramePriority */
+        SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
+        30000,/* SoAdSocketLocalPort */
+        SOAD_FALSE,/* SoAdSocketMsgAcceptanceFilterEnabled */
+        SOAD_TRUE,/* SoAdSocketSoConModeChgNotification */
+        0,/* SoAdSocketTpRxBufferMin */
+        SOAD_FALSE, /* SoAdSocketTcpInitiate */
+        VTCPIP_AF_INET, /* W32AfType */
+        VTCPIP_SOCK_STREAM, /* W32SocketType */
+        VTCPIP_IPPROTO_TCP, /* W32ProtocolType */
+        "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
+    },
 };
 const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrArr);
 
 
-static const uint32 SoAdSoCon0_PduRouteDestList[1]={0};
-static const uint32 SoAdSoCon0_SocketRouteDestList[1]={0};
+static const uint32 SoAdSoCon0_PduRouteDestList[]={0,1,2};
+static const uint32 SoAdSoCon0_SocketRouteDestList[]={0};
 
-static const uint32 SoAdSoCon1_PduRouteDestList[1]={1};
-static const uint32 SoAdSoCon1_SocketRouteDestList[1]={1};
+static const uint32 SoAdSoCon1_PduRouteDestList[]={1};
+static const uint32 SoAdSoCon1_SocketRouteDestList[]={1};
 
-static const uint32 SoAdSoCon2_PduRouteDestList[1]={2};
-static const uint32 SoAdSoCon2_SocketRouteDestList[1]={2};
+static const uint32 SoAdSoCon2_PduRouteDestList[]={2};
+static const uint32 SoAdSoCon2_SocketRouteDestList[]={2};
 
 const SoAd_CfgSoCon_t SoAd_SoConArr[] =
 {
@@ -212,7 +228,7 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
     {
         "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
         20002,/* SoAdSocketRemotePort */
-        1, /* SoConGrIdx */
+        2, /* SoConGrIdx */
         &SoAdSoCon2_PduRouteDestList[0], /* PduRouteDestList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon2_PduRouteDestList), /* PduRouteDestListSize */
         &SoAdSoCon2_SocketRouteDestList[0], /* SocketRouteDestList */
