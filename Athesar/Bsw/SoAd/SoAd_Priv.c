@@ -76,12 +76,17 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
   }
 }
 
+static void soad_CloseSoCon(SoAd_SoConIdType SoConId)
+{
+  closesocket()
+}
+
 static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 {
   /* UDP */
   if(SOAD_IS_UDP_SOCON(SoConId))
   {
-
+    soad_CloseSoCon(SoConId);
   }
 
   /* TCP */
@@ -93,13 +98,7 @@ static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 
     }
 
-    if(SOAD_IS_TCP_SERVER_SOCON(SoConId))
-    {
-
-    }else
-    {
-      //client
-    }
+    soad_CloseSoCon(SoConId);
   }
 }
 
