@@ -193,7 +193,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrArr);
 
 
-static const uint32 SoAdSoCon0_PduRouteDestList[]={0,1,2};
+static const uint32 SoAdSoCon0_PduRouteDestList[]={0};
 static const uint32 SoAdSoCon0_SocketRouteDestList[]={0};
 
 static const uint32 SoAdSoCon1_PduRouteDestList[]={1};

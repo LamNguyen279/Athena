@@ -26,6 +26,7 @@ static void soad_UpperIfRxIndication(SoAd_SoConIdType SoConId, PduInfoType *Info
 
 static Std_ReturnType soad_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId);
+static void soad_FreeSoCon(SoAd_SoConIdType SoConId);
 
 static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon);
 
@@ -67,13 +68,110 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
     default:
       break;
   }
+
+  if(SOAD_CHECK_SOCCON_NEED_CLOSE(SoConId))
+  {
+    /* free SoCon connection resource */
+    soad_FreeSoCon(SoConId);
+  }
+}
+
+static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
+{
+  /* UDP */
+  if(SOAD_IS_UDP_SOCON(SoConId))
+  {
+
+  }
+
+  /* TCP */
+  if(SOAD_IS_TCP_SOCON(SoConId))
+  {
+    /* TCP data TX/RX is on going, Let It Done */
+    if(SOAD_IS_TCP_SOCON_DATA_ONGOING(SoConId))
+    {
+
+    }
+
+    if(SOAD_IS_TCP_SERVER_SOCON(SoConId))
+    {
+
+    }else
+    {
+      //client
+    }
+  }
+}
+
+void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
+{
+  SoAdSoCon_t *soCon = &SoAd_DynSoConArr[SoConId];
+
+  memset(soCon->RemoteAddress, 0, SOAD_IPV4_ADD_SIZE);
+
+  soCon->RemotePort = 0;
+
+  soCon->RequestMask = SOAD_SOCCON_REQMASK_NON;
+
+  soCon->RxBuff = malloc(SOAD_CFG_SOCON_RX_BUFF_SIZE);
+  soCon->TxBuff = malloc(SOAD_CFG_SOCON_TX_BUFF_SIZE);
+
+  soCon->RxLength = 0;
+
+  soCon->SoAdSoConState = SOAD_SOCON_OFFLINE;
+
+  soCon->W32Sock = SOAD_W32_INVALID_SOCKET;
+
+  soCon->W32SockState = SOAD_W32SOCK_STATE_INVALID;
+
+  soCon->W32Thread.Hdl = INVALID_HANDLE_VALUE;
+  soCon->W32Thread.Id = SOAD_INVALID_NUMBER;
+
+  //this stuff is for pass over to the thread.
+  soCon->W32SoAdSoConId = SoConId;
+}
+
+void _SoAd_InitSoConGroup(uint32 SoConGr)
+{
+  SoAdSoConGr_t *soConGr = &SoAd_DynSoConGrArr[SoConGr];
+
+  soConGr->W32SockListen = SOAD_W32_INVALID_SOCKET;
+
+  soConGr->W32SockListenState = SOAD_W32SOCK_STATE_INVALID;
+
+  soConGr->W32Thread.Hdl = INVALID_HANDLE_VALUE;
+
+  soConGr->W32Thread.Id = SOAD_INVALID_NUMBER;
+}
+
+void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
+{
+  BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
+  PduLengthType upperBufferSizePtr;
+  PduInfoType pduInfo;
+
+  SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
+
+  if(SoAd_DynSoConArr[SoConId].RxLength > 0)
+  {
+    if(SOAD_IS_TCP_SOCON(SoConId))
+    {
+      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxLength;
+      pduInfo.SduDataPtr = SoAd_DynSoConArr[SoConId].RxBuff;
+
+      SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
+          socketRoute->SoAdRxPduRef, &pduInfo, pduInfo.SduLength, &upperBufferSizePtr);
+
+      SoAd_DynSoConArr[SoConId].RxLength = 0;
+    }
+  }
 }
 
 static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_NOT_OK;
 
-  if(_SOAD_CHECK_SOCCON_NEED_OPEN(SoConId))
+  if(SOAD_CHECK_SOCCON_NEED_OPEN(SoConId))
   {
     ret = soad_CreateSocket(SoConId);
 
@@ -291,29 +389,6 @@ static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId)
   return ret;
 }
 
-void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
-{
-  BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
-  PduLengthType upperBufferSizePtr;
-  PduInfoType pduInfo;
-
-  SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
-
-  if(SoAd_DynSoConArr[SoConId].RxLength > 0)
-  {
-    if(SOAD_IS_TCP_SOCON(SoConId))
-    {
-      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxLength;
-      pduInfo.SduDataPtr = SoAd_DynSoConArr[SoConId].RxBuff;
-
-      SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
-          socketRoute->SoAdRxPduRef, &pduInfo, pduInfo.SduLength, &upperBufferSizePtr);
-
-      SoAd_DynSoConArr[SoConId].RxLength = 0;
-    }
-  }
-}
-
 static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
 {
   int resultLength = -1;
@@ -374,7 +449,7 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
   }
 }
 
-void soad_SocketListenRoutine(SoAdSoConGr_t *SoConGr)
+static void soad_SocketListenRoutine(SoAdSoConGr_t *SoConGr)
 {
   int iResult;
   WSADATA wsaData;
@@ -455,7 +530,7 @@ void soad_SocketListenRoutine(SoAdSoConGr_t *SoConGr)
   }
 }
 
-Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon)
+static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSocon)
 {
   SoAd_SoConIdType soconIdx = 0;
   Std_ReturnType ret = E_NOT_OK;
@@ -477,7 +552,7 @@ Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *retSoco
   return ret;
 }
 
-void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
+static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
 {
   int iResult = -1;
   Std_ReturnType ret = E_OK;
@@ -542,7 +617,7 @@ void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
   }
 }
 
-Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size)
+static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size)
 {
   Std_ReturnType ret = E_OK;
   uint32 idx;
@@ -596,44 +671,4 @@ static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeT
   }
 }
 
-void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
-{
-  SoAdSoCon_t *soCon = &SoAd_DynSoConArr[SoConId];
-
-  memset(soCon->RemoteAddress, 0, SOAD_IPV4_ADD_SIZE);
-
-  soCon->RemotePort = 0;
-
-  soCon->RequestMask = SOAD_SOCCON_REQMASK_NON;
-
-  soCon->RxBuff = malloc(SOAD_CFG_SOCON_RX_BUFF_SIZE);
-  soCon->TxBuff = malloc(SOAD_CFG_SOCON_TX_BUFF_SIZE);
-
-  soCon->RxLength = 0;
-
-  soCon->SoAdSoConState = SOAD_SOCON_OFFLINE;
-
-  soCon->W32Sock = SOAD_W32_INVALID_SOCKET;
-
-  soCon->W32SockState = SOAD_W32SOCK_STATE_INVALID;
-
-  soCon->W32Thread.Hdl = INVALID_HANDLE_VALUE;
-  soCon->W32Thread.Id = SOAD_INVALID_NUMBER;
-
-  //this stuff is for pass over to the thread.
-  soCon->W32SoAdSoConId = SoConId;
-}
-
-void _SoAd_InitSoConGroup(uint32 SoConGr)
-{
-  SoAdSoConGr_t *soConGr = &SoAd_DynSoConGrArr[SoConGr];
-
-  soConGr->W32SockListen = SOAD_W32_INVALID_SOCKET;
-
-  soConGr->W32SockListenState = SOAD_W32SOCK_STATE_INVALID;
-
-  soConGr->W32Thread.Hdl = INVALID_HANDLE_VALUE;
-
-  soConGr->W32Thread.Id = SOAD_INVALID_NUMBER;
-}
 /* ***************************** [ FUNCTIONS ] ****************************** */

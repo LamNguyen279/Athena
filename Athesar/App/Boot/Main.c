@@ -1,3 +1,16 @@
+/*
+ * Main.c
+ *
+ *  Created on: Jul 30, 2023
+ *      Author: lam nguyen
+ *
+               /\_/\   /\_/\
+              ( o.o ) ( o.o )
+               > ^ <   > ^ <
+ *
+ */
+
+
 #include "vTask.h"
 #include "vScheduler.h"
 #include "vEvent.h"
@@ -40,11 +53,26 @@ void OsTask_BswMain_10ms(void)
   }
 }
 
-
+uint32 TestCaseIdx = -1;
+uint32 TestSoConIdx = 0;
 void OsTask_1ms(void)
 {
   while(1)
   {
+    switch(TestCaseIdx)
+    {
+    case 0:
+      SoAd_OpenSoCon(TestSoConIdx);
+      TestCaseIdx = -1;
+      break;
+    case 1:
+      SoAd_CloseSoCon(TestSoConIdx, 0);
+      TestCaseIdx = -1;
+      break;
+    default:
+      break;
+    }
+
     vTaskTicksDelay(10);
     vEventSet( BswMainTask_10ms, OsEvent_BswMainFunction_10ms );
   }

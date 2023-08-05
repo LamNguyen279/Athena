@@ -41,6 +41,8 @@
     IdxVar = 0; \
     for (; (IdxVar) < (Range); (IdxVar)++)
 
+
+#define SOAD_IPV4_ADD_SIZE                        15
 //socket utilities
 #define SOAD_SOCCON_REQMASK_NON    0
 #define SOAD_SOCCON_REQMASK_OPEN   1
@@ -55,19 +57,20 @@
 #define SOAD_CLEAR_SOCON_REQMASK(SoConId, mask) \
   (SoAd_DynSoConArr[(SoConId)].RequestMask &= ~(mask))
 
-#define _SOAD_CHECK_SOCCON_NEED_OPEN(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
+#define SOAD_CHECK_SOCCON_NEED_OPEN(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
+#define SOAD_CHECK_SOCCON_NEED_CLOSE(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_CLOSE))
 
-#define SOAD_GET_SOCON_FNCTBL(SoConId)       (SoAd_UpperFunctionTable[SOAD_DYN_SOCON((SoConId)).Upper])
+#define SOAD_IS_TCP_SOCON_DATA_ONGOING(SoConId) 0
 
 //socket group utilities
-#define SOAD_GET_DYN_SOCON_GROUP(SoConId)             (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
+#define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
 
 #define SOAD_GET_SOCON_GROUPID(SoConId)           (SoAd_SoConArr[(SoConId)].SoConGrIdx)
 #define SOAD_GET_SOCON_GROUP(SoConId)             (SoAd_SoConGrArr[SoAd_SoConArr[(SoConId)].SoConGrIdx])
-#define SOAD_GET_SOCON_PROTOCOL(SoConId)     (SOAD_GET_SOCON_GROUP((SoConId)).W32ProtocolType)
-#define SOAD_IS_UDP_SOCON(SoConId)           (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_UDP)
-#define SOAD_IS_TCP_SOCON(SoConId)           (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_TCP)
-#define SOAD_IS_TCP_SERVER_SOCON(SoConId)    ( (SOAD_IS_TCP_SOCON((SoConId)) && SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketTcpInitiate) )
+#define SOAD_GET_SOCON_PROTOCOL(SoConId)          (SOAD_GET_SOCON_GROUP((SoConId)).W32ProtocolType)
+#define SOAD_IS_UDP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_UDP)
+#define SOAD_IS_TCP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_TCP)
+#define SOAD_IS_TCP_SERVER_SOCON(SoConId)         ( (SOAD_IS_TCP_SOCON((SoConId)) && SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketTcpInitiate) )
 
 //W32 utilities
 #define SOAD_W32_INVALID_SOCKET   INVALID_SOCKET
@@ -79,7 +82,7 @@
       ret = E_NOT_OK; \
   }
 
-//function tabble
+//function table
 #define SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId)                       SOAD_GET_UPPER_FNCTBL_BY_SOCKETROUTEDEST(SoAd_SoConArr[(SoConId)].SocketRouteDestList[0])
 
 #define SOAD_GET_TCP_SOCON_UPPER_LAYER(SoConId)                       SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId).SoAdRxUpperLayerType
@@ -244,14 +247,13 @@ typedef struct _SoAdSock_t
   char *RxBuff;
   char *TxBuff;
   uint32_t RxLength;
+  uint32_t TxLength;
   char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
   uint32 RemotePort;
-  SoAd_Upper_t Upper; //remove late
   //AUTOSAR
   uint32 RequestMask;
   SoAd_SoConIdType W32SoAdSoConId;
   SoAd_SoConModeType SoAdSoConState;
-  PduIdType TxPduId;
 } SoAdSoCon_t;
 
 
@@ -271,6 +273,7 @@ typedef struct _SoAdSoConGrHandler_t
 void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId);
 void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId);
 void _SoAd_InitSocon(SoAd_SoConIdType SoConId);
+void _SoAd_InitSoConGroup(uint32 SoConGr);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */
