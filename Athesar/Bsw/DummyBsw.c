@@ -71,4 +71,29 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
   printf("SduDataPtr = %s \n", &buffer);
 
   fflush(stdout);
+
+  if(info->SduLength == 0)
+  {
+    *bufferSizePtr = (rand() % 10);
+
+    return BUFREQ_OK;
+  }
+}
+
+uint8 DoIP_SoAdTpCopyRxDataBuff[1024];
+uint32 DoIP_SoAdTpCopyRxDataCopyIdx = 0;
+BufReq_ReturnType DoIP_SoAdTpCopyRxData(
+  PduIdType id,
+  const PduInfoType *info,
+  PduLengthType *bufferSizePtr)
+{
+
+  memcpy(&DoIP_SoAdTpCopyRxDataBuff[DoIP_SoAdTpCopyRxDataCopyIdx], info->SduDataPtr, info->SduLength);
+
+  if(info->SduLength == 0)
+  {
+    *bufferSizePtr = (rand() % 10);
+
+    return BUFREQ_OK;
+  }
 }

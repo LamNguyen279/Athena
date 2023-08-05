@@ -21,7 +21,7 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
         NULL_PTR, //UpperIfTriggerTransmit
         NULL_PTR, //UpperIfTxConfirmation
         &DoIP_SoAdTpStartOfReception, //UpperTpStartOfReception
-        NULL_PTR, //UpperTpCopyRxData
+        &DoIP_SoAdTpCopyRxData, //UpperTpCopyRxData
         NULL_PTR, //UpperTpRxIndication
         NULL_PTR, //UpperTpCopyTxData
         NULL_PTR, //UpperTpTpTxConfirmation
@@ -29,28 +29,6 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
         NULL_PTR //LocalIpAddrAssignmentChg
     }
 };
-
-//SoAd_CfgSoConGrPar_t soconGr0Par = {
-//    FALSE, //Server
-//    VTCPIP_AF_INET,
-//    VTCPIP_SOCK_DGRAM,
-//    VTCPIP_IPPROTO_UDP,
-//    "127.0.0.1",
-//    12345,
-//    NULL, //SoAdSocketIpAddrAssignmentChgNotification
-//    NULL //SoAdSocketSoConModeChgNotification
-//};
-//
-//SoAd_CfgSoConGrPar_t soconGr1Par = {
-//    TRUE, //Server
-//    VTCPIP_AF_INET,
-//    VTCPIP_SOCK_STREAM,
-//    VTCPIP_IPPROTO_TCP,
-//    "127.0.0.1",
-//    12345,
-//    NULL, //SoAdSocketIpAddrAssignmentChgNotification
-//    NULL //SoAdSocketSoConModeChgNotification
-//};
 
 const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
 {

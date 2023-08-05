@@ -26,6 +26,17 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
     const PduInfoType *info,
     PduLengthType TpSduLength,
     PduLengthType *bufferSizePtr);
+
+extern BufReq_ReturnType DoIP_SoAdTpCopyRxData(
+  PduIdType id,
+  const PduInfoType *info,
+  PduLengthType *bufferSizePtr);
+
+//extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
+//  PduIdType id,
+//  PduInfoType info,
+//  PduLengthType TpSduLength,
+//  PduLengthType bufferSizePtr);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

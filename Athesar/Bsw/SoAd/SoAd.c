@@ -90,8 +90,8 @@ Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *
 
 Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
   Std_ReturnType ret = E_OK;;
-
   if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
+
   {
     SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
   }

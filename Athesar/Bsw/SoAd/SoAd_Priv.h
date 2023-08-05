@@ -18,6 +18,9 @@
 #include "ComStack_Types.h"
 #include "SoAd.h"
 /* ***************************** [ MACROS    ] ****************************** */
+#define SOAD_SOCON_BUFF_SIZE                      256
+#define SOAD_SOCON_QUEUE_DEPTH                    10
+
 //coding utilities
 #define SOAD_GET_ARRAY_SIZE(array)  ( sizeof( (array) ) / sizeof( (array[0]) ) )
 
@@ -57,10 +60,10 @@
 #define SOAD_CLEAR_SOCON_REQMASK(SoConId, mask) \
   (SoAd_DynSoConArr[(SoConId)].RequestMask &= ~(mask))
 
-#define SOAD_CHECK_SOCCON_NEED_OPEN(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
-#define SOAD_CHECK_SOCCON_NEED_CLOSE(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_CLOSE))
+#define SOAD_CHECK_SOCON_NEED_OPEN(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
+#define SOAD_CHECK_SOCON_NEED_CLOSE(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_CLOSE))
 
-#define SOAD_IS_TCP_SOCON_DATA_ONGOING(SoConId) 0
+#define SOAD_IS_SOCON_DATA_ONGOING(SoConId) 0
 
 //socket group utilities
 #define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
@@ -235,6 +238,27 @@ typedef struct _SoAd_SoCon_t
 } SoAd_CfgSoCon_t;
 
 //runtime type
+typedef struct _SoAd_SocketBuffer_t
+{
+  uint8 data[SOAD_SOCON_BUFF_SIZE];
+  uint32 length;
+} SoAd_SoConBuffer_t;
+
+typedef struct _SoAd_SocketBufferQueue_t {
+  SoAd_SoConBuffer_t buffer[SOAD_SOCON_QUEUE_DEPTH];
+  uint32_t front;
+  uint32_t rear;
+  uint32_t count;
+} SoAd_SocketBufferQueue_t;
+
+typedef enum _SoAd_TpSessionState_t
+{
+  SOAD_SS_STOP = 0,
+  SOAD_SS_START,
+  SOAD_SS_COPYING,
+  SOAD_SS_DONE
+} SoAd_TpSessionState_t;
+
 typedef struct _SoAdSock_t
 {
   struct
@@ -244,10 +268,16 @@ typedef struct _SoAdSock_t
   } W32Thread;
   SOCKET W32Sock;
   SoAd_W32SocketState_t W32SockState;
+  SoAd_SoConBuffer_t *TcpRxBuff;
+  SoAd_SoConBuffer_t *TcpTxBuff;
   char *RxBuff;
   char *TxBuff;
-  uint32_t RxLength;
-  uint32_t TxLength;
+  uint32_t RxSsCopiedLength;
+  uint32_t RxSsLastUpperAskedSize;
+  SoAd_TpSessionState_t TxSsState;
+  SoAd_TpSessionState_t RxSsState;
+  SoAd_SocketBufferQueue_t TxQueue;
+  SoAd_SocketBufferQueue_t RxQueue;
   char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
   uint32 RemotePort;
   //AUTOSAR
@@ -255,7 +285,6 @@ typedef struct _SoAdSock_t
   SoAd_SoConIdType W32SoAdSoConId;
   SoAd_SoConModeType SoAdSoConState;
 } SoAdSoCon_t;
-
 
 typedef struct _SoAdSoConGrHandler_t
 {

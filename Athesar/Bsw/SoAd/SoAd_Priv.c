@@ -22,7 +22,7 @@ static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId);
 static void soad_SocketListenRoutine(SoAdSoConGr_t *SoConGr);
 
 static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode);
-static void soad_UpperIfRxIndication(SoAd_SoConIdType SoConId, PduInfoType *Info);
+static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *Info);
 
 static Std_ReturnType soad_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId);
@@ -32,6 +32,9 @@ static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *
 
 static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size);
 
+static void soad_EnQueueSoconBuffer(SoAd_SoConIdType SoConId, SoAd_SoConBuffer_t *SoConData);
+static SoAd_SoConBuffer_t *soad_GetFirstElementSoconQueue(SoAd_SoConIdType SoConId);
+static void soad_RemoveFirstElementSoconQueue(SoAd_SoConIdType SoConId);
 /* ***************************** [ DATAS     ] ****************************** */
 
 SoAdSoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
@@ -69,16 +72,24 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
       break;
   }
 
-  if(SOAD_CHECK_SOCCON_NEED_CLOSE(SoConId))
+  if(SOAD_CHECK_SOCON_NEED_CLOSE(SoConId))
   {
     /* free SoCon connection resource */
-    soad_FreeSoCon(SoConId);
+    if(SOAD_IS_SOCON_DATA_ONGOING(SoConId))
+    {
+      /*TODO: handle on going TX/RX data */
+    }else
+    {
+      soad_FreeSoCon(SoConId);
+      SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
+    }
   }
 }
 
 static void soad_CloseSoCon(SoAd_SoConIdType SoConId)
 {
-  closesocket()
+  closesocket(SoAd_DynSoConArr[SoConId].W32Sock);
+  WSACleanup();
 }
 
 static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
@@ -86,20 +97,25 @@ static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
   /* UDP */
   if(SOAD_IS_UDP_SOCON(SoConId))
   {
-    soad_CloseSoCon(SoConId);
+
   }
 
   /* TCP */
   if(SOAD_IS_TCP_SOCON(SoConId))
   {
-    /* TCP data TX/RX is on going, Let It Done */
-    if(SOAD_IS_TCP_SOCON_DATA_ONGOING(SoConId))
-    {
 
-    }
-
-    soad_CloseSoCon(SoConId);
   }
+
+  soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_OFFLINE);
+
+  TerminateThread(SoAd_DynSoConArr[SoConId].W32Thread.Hdl, 0);
+
+  soad_CloseSoCon(SoConId);
+
+  free(SoAd_DynSoConArr[SoConId].RxBuff);
+  free(SoAd_DynSoConArr[SoConId].TxBuff);
+
+  _SoAd_InitSocon(SoConId);
 }
 
 void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
@@ -115,7 +131,7 @@ void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
   soCon->RxBuff = malloc(SOAD_CFG_SOCON_RX_BUFF_SIZE);
   soCon->TxBuff = malloc(SOAD_CFG_SOCON_TX_BUFF_SIZE);
 
-  soCon->RxLength = 0;
+  soCon->RxSsCopiedLength = 0;
 
   soCon->SoAdSoConState = SOAD_SOCON_OFFLINE;
 
@@ -151,17 +167,17 @@ void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
 
   SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
 
-  if(SoAd_DynSoConArr[SoConId].RxLength > 0)
+  if(SoAd_DynSoConArr[SoConId].RxSsCopiedLength > 0)
   {
     if(SOAD_IS_TCP_SOCON(SoConId))
     {
-      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxLength;
+      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxSsCopiedLength;
       pduInfo.SduDataPtr = SoAd_DynSoConArr[SoConId].RxBuff;
 
       SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
           socketRoute->SoAdRxPduRef, &pduInfo, pduInfo.SduLength, &upperBufferSizePtr);
 
-      SoAd_DynSoConArr[SoConId].RxLength = 0;
+      SoAd_DynSoConArr[SoConId].RxSsCopiedLength = 0;
     }
   }
 }
@@ -170,7 +186,7 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_NOT_OK;
 
-  if(SOAD_CHECK_SOCCON_NEED_OPEN(SoConId))
+  if(SOAD_CHECK_SOCON_NEED_OPEN(SoConId))
   {
     ret = soad_CreateSocket(SoConId);
 
@@ -398,6 +414,8 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
   PduInfoType pduInfo;
   uint8 rxBuffer[SOAD_CFG_SOCON_RX_BUFF_SIZE];
 
+  SoAd_SoConBuffer_t buffData;
+
   while(1)
   {
     resultLength = recv(thisSoAdSock->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_RX_BUFF_SIZE, 0);
@@ -409,27 +427,39 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
         pduInfo.SduLength = resultLength;
         pduInfo.SduDataPtr = &rxBuffer[0];
 
-        soad_UpperIfRxIndication(thisSoConId, &pduInfo);
+        soad_IfRxIndicationAllUppers(thisSoConId, &pduInfo);
 
-        thisSoAdSock->RxLength = 0;
+        thisSoAdSock->RxSsCopiedLength = 0;
 
       }else if(SOAD_IS_TCP_SOCON(thisSoConId))
       {
         if(resultLength != 0)
         {
-          thisSoAdSock->RxLength = resultLength;
+          //upper is IF
+          if(SOAD_GET_TCP_SOCON_SOCKET_ROUTE(thisSoConId).SoAdRxUpperLayerType == SOAD_UPPER_IF)
+          {
+            soad_IfRxIndicationAllUppers(thisSoConId, &pduInfo);
+          }else
+          {
+            buffData.length = resultLength;
+            memcpy(&(buffData.data[0]), &rxBuffer[0], resultLength);
 
-          memset(thisSoAdSock->RxBuff, 0, SOAD_CFG_SOCON_RX_BUFF_SIZE);
-          memcpy(thisSoAdSock->RxBuff, &rxBuffer[0], resultLength);
+            //TODO: store queue
+            soad_EnQueueSoconBuffer(thisSoConId, &buffData);
+
+            //start copy SS
+            SoAd_DynSoConArr[thisSoConId].RxSsState = SOAD_SS_START;
+          }
         }else
         {
-          //connection lost
+          //TODO: when connection lost detected
           if(SOAD_IS_TCP_SERVER_SOCON(thisSoConId))
           {
             thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_LISTENING;
             soad_SoConModeChgAllUppers(thisSoConId, SOAD_SOCON_RECONNECT);
           }else
           {
+            //case TCP client connection
             thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_INVALID;
             soad_SoConModeChgAllUppers(thisSoConId, SOAD_SOCON_OFFLINE);
           }
@@ -637,7 +667,7 @@ static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size)
   return ret;
 }
 
-static void soad_UpperIfRxIndication(SoAd_SoConIdType SoConId, PduInfoType *Info)
+static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *Info)
 {
   uint32 socketRoutedestCtn = 0;
   uint32 socketRoutedest = 0;
@@ -666,8 +696,154 @@ static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeT
 
     SOAD_GET_UPPER_FNCTBL_BY_PDUROUTEDEST(pduroutedest).UpperSoConModeChg(SoConId, Mode);
 
+    SoAd_DynSoConArr[SoConId].SoAdSoConState = Mode;
+
     pduroutedestCtn++;
   }
 }
 
+static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
+{
+  BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
+  PduLengthType upperBufferSizeAsked;
+
+  PduLengthType copiedLength = -1;
+
+  PduInfoType pduInfo;
+
+  SoAd_SoConBuffer_t *soConBufferData;
+
+  BufReq_ReturnType upperBufferReqRet;
+
+  SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
+
+  switch(SoAd_DynSoConArr[SoConId].RxSsState)
+  {
+    case SOAD_SS_START:
+      soConBufferData = soad_GetFirstElementSoconQueue(SoConId);
+
+      //call <Up>_[SoAd][Tp]StartOfReception to ask size
+      pduInfo.SduLength = 0;
+      pduInfo.SduDataPtr = NULL_PTR;
+
+      SoAd_DynSoConArr[SoConId].RxSsCopiedLength = soConBufferData->length;
+
+      /* SWS_SoAd_00568  */
+      upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
+          socketRoute->SoAdRxPduRef, &pduInfo, soConBufferData->length, &upperBufferSizeAsked);
+
+      if(upperBufferReqRet == BUFREQ_OK)
+      {
+        if(upperBufferSizeAsked > 0)
+        {
+          pduInfo.SduLength = upperBufferSizeAsked;
+          pduInfo.SduDataPtr = &(soConBufferData->data[0]);
+
+          copiedLength = (upperBufferSizeAsked >= soConBufferData->length) ?
+              soConBufferData->length : upperBufferSizeAsked;
+
+          /* call Up>_[SoAd][Tp]CopyRxData */
+          upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpCopyRxData(
+              socketRoute->SoAdRxPduRef,
+              &pduInfo,
+              &upperBufferSizeAsked);
+
+          if(upperBufferReqRet == BUFREQ_OK)
+          {
+
+            if(copiedLength == soConBufferData->length)
+            {
+              //Copy done -> UpperTpRxIndication
+              SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
+              SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_DONE;
+
+              soad_RemoveFirstElementSoconQueue(SoConId);
+            }else
+            {
+              //copy on going
+              SoAd_DynSoConArr[SoConId].RxSsCopiedLength = copiedLength;
+              SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize = upperBufferSizeAsked;
+              SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_COPYING;
+            }
+          }else
+          {
+            /* TODO: SWS_SoAd_00570 -> close socket */
+          }
+
+        }else
+        {
+          /* No buffer size in upper, do nothing */
+        }
+      }else
+      {
+        /* TODO: SWS_SoAd_00570 -> close socket */
+      }
+
+      break;
+    case SOAD_SS_COPYING:
+
+      soConBufferData = soad_GetFirstElementSoconQueue(SoConId);
+
+      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize;
+      pduInfo.SduDataPtr = &(soConBufferData->data[SoAd_DynSoConArr[SoConId].RxSsCopiedLength]);
+
+      upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpCopyRxData(
+          socketRoute->SoAdRxPduRef,
+          &pduInfo,
+          &upperBufferSizeAsked);
+
+      copiedLength = (upperBufferSizeAsked >= soConBufferData->length) ?
+          soConBufferData->length : upperBufferSizeAsked;
+
+      if(BUFREQ_OK == upperBufferReqRet)
+      {
+        if(copiedLength == soConBufferData->length)
+        {
+          SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_DONE;
+        }else
+        {
+          //copy on going
+          SoAd_DynSoConArr[SoConId].RxSsCopiedLength = copiedLength;
+          SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize = upperBufferSizeAsked;
+          SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_COPYING;
+        }
+      }else
+      {
+        //-> close socket
+      }
+
+      break;
+    case SOAD_SS_DONE:
+      //Copy done -> UpperTpRxIndication
+      SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
+      soad_RemoveFirstElementSoconQueue(SoConId);
+      SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_STOP;
+      break;
+    case SOAD_SS_STOP:
+      break;
+    default:
+      break;
+  }
+
+  if(upperBufferReqRet == BUFREQ_E_NOT_OK)
+  {
+    /* TODO: SWS_SoAd_00570 -> close socket */
+    SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
+  }
+}
+
+static void soad_EnQueueSoconBuffer(SoAd_SoConIdType SoConId, SoAd_SoConBuffer_t *SoConData)
+{
+
+}
+
+static SoAd_SoConBuffer_t *soad_GetFirstElementSoconQueue(SoAd_SoConIdType SoConId)
+{
+
+}
+
+static void soad_RemoveFirstElementSoconQueue(SoAd_SoConIdType SoConId)
+{
+
+}
 /* ***************************** [ FUNCTIONS ] ****************************** */
