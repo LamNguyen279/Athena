@@ -35,6 +35,10 @@ extern BufReq_ReturnType DoIP_SoAdTpCopyRxData(
 extern void DoIP_SoAdTpRxIndication(
     PduIdType id,
     Std_ReturnType result);
+
+extern void DoIP_LocalIpAddrAssignmentChg(
+    SoAd_SoConIdType SoConId,
+    TcpIp_IpAddrStateType State);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

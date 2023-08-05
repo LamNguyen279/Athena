@@ -100,6 +100,8 @@ Std_ReturnType SoAd_SetRemoteAddr(SoAd_SoConIdType SoConId,
 /* @SWS_SoAd_00121 */
 void SoAd_MainFunction(void);
 
+void SoAd_LocalIpAddrAssignmentChg(TcpIp_LocalAddrIdType IpAddrId,  TcpIp_IpAddrStateType State);
+
 #ifdef __cplusplus
 }
 #endif

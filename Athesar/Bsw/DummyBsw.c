@@ -7,7 +7,7 @@
 #define UNUSED(variable) (void) variable
 #endif
 
-#define DOIP_RANDOM_BUFF_SIZE 10
+#define DOIP_RANDOM_BUFF_SIZE 20
 
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
@@ -46,11 +46,6 @@ void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
   printf("SoConId = %d \n", SoConId);
   printf("Mode = %s \n", SOAD_SOCON_MODE_TO_STR(Mode));
   fflush(stdout);
-
-  if(SoConId == 2 && Mode == SOAD_SOCON_OFFLINE)
-  {
-    SoAd_OpenSoCon(2);
-  }
 }
 
 uint32 DoIP_SoAdTpStartOfReceptionCtn = 0;
@@ -142,4 +137,14 @@ void DoIP_SoAdTpRxIndication(
   DoIP_SoAdTpCopyRxDataCopyIdx = 0;
 
   fflush(stdout);
+}
+
+void DoIP_LocalIpAddrAssignmentChg(
+    SoAd_SoConIdType SoConId,
+    TcpIp_IpAddrStateType State)
+{
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_LocalIpAddrAssignmentChg() %d \n", DoIP_SoAdTpRxIndicationCtn);
+  printf("SoConId = %d \n", SoConId);
+  printf("State = %d \n", State);
 }

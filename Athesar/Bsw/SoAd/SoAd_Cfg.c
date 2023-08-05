@@ -25,8 +25,8 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
         &DoIP_SoAdTpRxIndication, //UpperTpRxIndication
         NULL_PTR, //UpperTpCopyTxData
         NULL_PTR, //UpperTpTpTxConfirmation
-        &DoIP_SoConModeChg, //UpperSoConModeChg
-        NULL_PTR //LocalIpAddrAssignmentChg
+        &DoIP_SoConModeChg, //UpperSoConModeChgDoIP_LocalIpAddrAssignmentChg
+        &DoIP_LocalIpAddrAssignmentChg, //LocalIpAddrAssignmentChg
     }
 };
 

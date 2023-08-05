@@ -35,7 +35,6 @@ void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
     _SoAd_InitSoConGroup(soConGr);
     soConGr++;
   }
-
 }
 
 
@@ -47,6 +46,11 @@ void SoAd_MainFunction(void)
 
     _SoAd_HandleSoConRxData(SoConId);
   }
+}
+
+void SoAd_LocalIpAddrAssignmentChg(TcpIp_LocalAddrIdType IpAddrId, TcpIp_IpAddrStateType State)
+{
+
 }
 
 Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr) {
@@ -89,9 +93,9 @@ Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *
 }
 
 Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
-  Std_ReturnType ret = E_OK;;
-  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
+  Std_ReturnType ret = E_OK;
 
+  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
   {
     SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
   }
@@ -107,7 +111,6 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
     SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
     SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
   }
-
 
   return ret;
 }

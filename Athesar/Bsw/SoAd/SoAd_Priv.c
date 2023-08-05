@@ -33,6 +33,7 @@ static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *
 static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size);
 
 static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId);
+static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId);
 
 static void soad_InitializeSoConQueue(SoAd_SocketBufferQueue_t *queue);
 static boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue);
@@ -79,12 +80,12 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
 
   if(SOAD_CHECK_SOCON_NEED_CLOSE(SoConId))
   {
-    /* free SoCon connection resource */
     if(SOAD_IS_SOCON_DATA_ONGOING(SoConId))
     {
       /*TODO: handle on going TX/RX data */
     }else
     {
+      /* free SoCon connection resource */
       soad_FreeSoCon(SoConId);
       SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
     }
@@ -166,13 +167,9 @@ void _SoAd_InitSoConGroup(uint32 SoConGr)
 
 void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
 {
-  BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
-  PduLengthType upperBufferSizePtr;
-  PduInfoType pduInfo;
-
-  SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
-
   soad_HandleTpRxSession(SoConId);
+
+  soad_HandleTpTxSession(SoConId);
 }
 
 static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
@@ -693,6 +690,11 @@ static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeT
   }
 }
 
+static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId)
+{
+
+}
+
 static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 {
   BufReq_ReturnType upperBufReqRet = BUFREQ_E_NOT_OK;
@@ -704,7 +706,7 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
   SoAd_SoConBuffer_t soConBufferData;
 
-  BufReq_ReturnType upperBufferReqRet;
+  BufReq_ReturnType upperBufferReqRet = BUFREQ_OK;
 
   SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
 
