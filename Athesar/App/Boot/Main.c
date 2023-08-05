@@ -55,6 +55,7 @@ void OsTask_BswMain_10ms(void)
 
 uint32 TestCaseIdx = -1;
 uint32 TestSoConIdx = 0;
+uint32 OsTask_1msCtn = 0;
 void OsTask_1ms(void)
 {
   while(1)
@@ -73,8 +74,14 @@ void OsTask_1ms(void)
       break;
     }
 
-    vTaskTicksDelay(10);
-    vEventSet( BswMainTask_10ms, OsEvent_BswMainFunction_10ms );
+    OsTask_1msCtn++;
+
+    if(OsTask_1msCtn == 10)
+    {
+      OsTask_1msCtn = 0;
+
+      vEventSet( BswMainTask_10ms, OsEvent_BswMainFunction_10ms );
+    }
   }
 }
 

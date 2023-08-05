@@ -22,7 +22,7 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
         NULL_PTR, //UpperIfTxConfirmation
         &DoIP_SoAdTpStartOfReception, //UpperTpStartOfReception
         &DoIP_SoAdTpCopyRxData, //UpperTpCopyRxData
-        NULL_PTR, //UpperTpRxIndication
+        &DoIP_SoAdTpRxIndication, //UpperTpRxIndication
         NULL_PTR, //UpperTpCopyTxData
         NULL_PTR, //UpperTpTpTxConfirmation
         &DoIP_SoConModeChg, //UpperSoConModeChg

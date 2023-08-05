@@ -86,7 +86,9 @@ void vSchedulerStop(void)
 
 void vSchedulerAddTask(vTaskHandler_t *task)
 {
+  WaitForSingleObject( _vSchedulerMutex, INFINITE );
   _vSchedulerEnqueueTask(task);
+  ReleaseMutex( _vSchedulerMutex );
 }
 
 vTaskHandler_t *vSchedulerGetCurRunTask(void)

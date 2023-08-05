@@ -20,6 +20,8 @@ void vEventSet(vTaskHandler_t *task, vEventMask_t eventMask)
       task->WaitValue |= eventMask;
       //push the task to ready list
       vSchedulerAddTask(task);
+
+      vSchedulerWaitForSchedulePoint();
     }
   }
 }

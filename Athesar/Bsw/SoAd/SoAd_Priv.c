@@ -32,9 +32,14 @@ static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *
 
 static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size);
 
-static void soad_EnQueueSoconBuffer(SoAd_SoConIdType SoConId, SoAd_SoConBuffer_t *SoConData);
-static SoAd_SoConBuffer_t *soad_GetFirstElementSoconQueue(SoAd_SoConIdType SoConId);
-static void soad_RemoveFirstElementSoconQueue(SoAd_SoConIdType SoConId);
+static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId);
+
+static void soad_InitializeSoConQueue(SoAd_SocketBufferQueue_t *queue);
+static boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue);
+static boolean soad_isQueueEmpty(SoAd_SocketBufferQueue_t *queue);
+static boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *buffer);
+static boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *dest);
+static boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue);
 /* ***************************** [ DATAS     ] ****************************** */
 
 SoAdSoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
@@ -112,9 +117,6 @@ static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 
   soad_CloseSoCon(SoConId);
 
-  free(SoAd_DynSoConArr[SoConId].RxBuff);
-  free(SoAd_DynSoConArr[SoConId].TxBuff);
-
   _SoAd_InitSocon(SoConId);
 }
 
@@ -128,8 +130,11 @@ void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
 
   soCon->RequestMask = SOAD_SOCCON_REQMASK_NON;
 
-  soCon->RxBuff = malloc(SOAD_CFG_SOCON_RX_BUFF_SIZE);
-  soCon->TxBuff = malloc(SOAD_CFG_SOCON_TX_BUFF_SIZE);
+  soad_InitializeSoConQueue(&(soCon->RxQueue));
+  soad_InitializeSoConQueue(&(soCon->TxQueue));
+
+  soCon->RxSsState = SOAD_SS_STOP;
+  soCon->TxSsState = SOAD_SS_STOP;
 
   soCon->RxSsCopiedLength = 0;
 
@@ -167,19 +172,7 @@ void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId)
 
   SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
 
-  if(SoAd_DynSoConArr[SoConId].RxSsCopiedLength > 0)
-  {
-    if(SOAD_IS_TCP_SOCON(SoConId))
-    {
-      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxSsCopiedLength;
-      pduInfo.SduDataPtr = SoAd_DynSoConArr[SoConId].RxBuff;
-
-      SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
-          socketRoute->SoAdRxPduRef, &pduInfo, pduInfo.SduLength, &upperBufferSizePtr);
-
-      SoAd_DynSoConArr[SoConId].RxSsCopiedLength = 0;
-    }
-  }
+  soad_HandleTpRxSession(SoConId);
 }
 
 static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
@@ -409,16 +402,16 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
   int resultLength = -1;
 
   SoAd_SoConIdType thisSoConId = *SoConId;
-  SoAdSoCon_t *thisSoAdSock = &SoAd_DynSoConArr[thisSoConId];
+  SoAdSoCon_t *thisSoSon = &SoAd_DynSoConArr[thisSoConId];
 
   PduInfoType pduInfo;
-  uint8 rxBuffer[SOAD_CFG_SOCON_RX_BUFF_SIZE];
+  uint8 rxBuffer[SOAD_CFG_SOCON_TRX_BUFF_SIZE];
 
   SoAd_SoConBuffer_t buffData;
 
   while(1)
   {
-    resultLength = recv(thisSoAdSock->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_RX_BUFF_SIZE, 0);
+    resultLength = recv(thisSoSon->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_TRX_BUFF_SIZE, 0);
 
     if(resultLength != -1)
     {
@@ -429,7 +422,7 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
 
         soad_IfRxIndicationAllUppers(thisSoConId, &pduInfo);
 
-        thisSoAdSock->RxSsCopiedLength = 0;
+        thisSoSon->RxSsCopiedLength = 0;
 
       }else if(SOAD_IS_TCP_SOCON(thisSoConId))
       {
@@ -441,31 +434,29 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
             soad_IfRxIndicationAllUppers(thisSoConId, &pduInfo);
           }else
           {
+            //upper is TP
             buffData.length = resultLength;
             memcpy(&(buffData.data[0]), &rxBuffer[0], resultLength);
 
-            //TODO: store queue
-            soad_EnQueueSoconBuffer(thisSoConId, &buffData);
-
-            //start copy SS
-            SoAd_DynSoConArr[thisSoConId].RxSsState = SOAD_SS_START;
+            //store queue
+            soad_EnqueueSoConData(&(thisSoSon->RxQueue), &buffData);
           }
         }else
         {
           //TODO: when connection lost detected
           if(SOAD_IS_TCP_SERVER_SOCON(thisSoConId))
           {
-            thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_LISTENING;
+            thisSoSon->W32SockState = SOAD_W32SOCK_STATE_LISTENING;
             soad_SoConModeChgAllUppers(thisSoConId, SOAD_SOCON_RECONNECT);
           }else
           {
             //case TCP client connection
-            thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_INVALID;
+            thisSoSon->W32SockState = SOAD_W32SOCK_STATE_INVALID;
             soad_SoConModeChgAllUppers(thisSoConId, SOAD_SOCON_OFFLINE);
           }
 
-          closesocket(thisSoAdSock->W32Sock);
-          TerminateThread(thisSoAdSock->W32Thread.Hdl, 0);
+          closesocket(thisSoSon->W32Sock);
+          TerminateThread(thisSoSon->W32Thread.Hdl, 0);
         }
       }else
       {
@@ -711,36 +702,44 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
   PduInfoType pduInfo;
 
-  SoAd_SoConBuffer_t *soConBufferData;
+  SoAd_SoConBuffer_t soConBufferData;
 
   BufReq_ReturnType upperBufferReqRet;
 
   SoAd_CfgSocketRoute_t *socketRoute = &SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId);
 
-  switch(SoAd_DynSoConArr[SoConId].RxSsState)
+  SoAdSoCon_t *thisSoCon = &SoAd_DynSoConArr[SoConId];
+
+  if(thisSoCon->RxSsState == SOAD_SS_STOP)
+  {
+    if(soad_getSoConQueueFirstElement(&(thisSoCon->RxQueue), &soConBufferData) == SOAD_TRUE)
+    {
+      thisSoCon->RxSsState = SOAD_SS_START;
+    }
+  }
+
+  switch((thisSoCon->RxSsState))
   {
     case SOAD_SS_START:
-      soConBufferData = soad_GetFirstElementSoconQueue(SoConId);
-
       //call <Up>_[SoAd][Tp]StartOfReception to ask size
       pduInfo.SduLength = 0;
       pduInfo.SduDataPtr = NULL_PTR;
 
-      SoAd_DynSoConArr[SoConId].RxSsCopiedLength = soConBufferData->length;
+      thisSoCon->RxSsCopiedLength = 0;
+      thisSoCon->RxSsLastUpperAskedSize = 0;
 
       /* SWS_SoAd_00568  */
       upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpStartOfReception(
-          socketRoute->SoAdRxPduRef, &pduInfo, soConBufferData->length, &upperBufferSizeAsked);
+          socketRoute->SoAdRxPduRef, &pduInfo, soConBufferData.length, &upperBufferSizeAsked);
 
       if(upperBufferReqRet == BUFREQ_OK)
       {
         if(upperBufferSizeAsked > 0)
         {
           pduInfo.SduLength = upperBufferSizeAsked;
-          pduInfo.SduDataPtr = &(soConBufferData->data[0]);
+          pduInfo.SduDataPtr = &(soConBufferData.data[0]);
 
-          copiedLength = (upperBufferSizeAsked >= soConBufferData->length) ?
-              soConBufferData->length : upperBufferSizeAsked;
+          thisSoCon->RxSsCopiedLength += upperBufferSizeAsked;
 
           /* call Up>_[SoAd][Tp]CopyRxData */
           upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpCopyRxData(
@@ -751,19 +750,18 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
           if(upperBufferReqRet == BUFREQ_OK)
           {
 
-            if(copiedLength == soConBufferData->length)
+            if(thisSoCon->RxSsCopiedLength == soConBufferData.length)
             {
               //Copy done -> UpperTpRxIndication
               SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
-              SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_DONE;
+              thisSoCon->RxSsState = SOAD_SS_DONE;
 
-              soad_RemoveFirstElementSoconQueue(SoConId);
+              soad_RemoveSoConQueueFirstElement(&(thisSoCon->RxQueue));
             }else
             {
               //copy on going
-              SoAd_DynSoConArr[SoConId].RxSsCopiedLength = copiedLength;
-              SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize = upperBufferSizeAsked;
-              SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_COPYING;
+              thisSoCon->RxSsLastUpperAskedSize = upperBufferSizeAsked;
+              thisSoCon->RxSsState = SOAD_SS_COPYING;
             }
           }else
           {
@@ -781,31 +779,30 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
       break;
     case SOAD_SS_COPYING:
+      soad_getSoConQueueFirstElement(&(thisSoCon->RxQueue), &soConBufferData);
 
-      soConBufferData = soad_GetFirstElementSoconQueue(SoConId);
+      pduInfo.SduLength = ((soConBufferData.length - thisSoCon->RxSsCopiedLength) >= thisSoCon->RxSsLastUpperAskedSize) ? \
+          thisSoCon->RxSsLastUpperAskedSize : (soConBufferData.length - thisSoCon->RxSsCopiedLength);
 
-      pduInfo.SduLength = SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize;
-      pduInfo.SduDataPtr = &(soConBufferData->data[SoAd_DynSoConArr[SoConId].RxSsCopiedLength]);
+      pduInfo.SduDataPtr = &(soConBufferData.data[thisSoCon->RxSsCopiedLength]);
 
       upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpCopyRxData(
           socketRoute->SoAdRxPduRef,
           &pduInfo,
           &upperBufferSizeAsked);
 
-      copiedLength = (upperBufferSizeAsked >= soConBufferData->length) ?
-          soConBufferData->length : upperBufferSizeAsked;
+      thisSoCon->RxSsCopiedLength += pduInfo.SduLength;
 
       if(BUFREQ_OK == upperBufferReqRet)
       {
-        if(copiedLength == soConBufferData->length)
+        if(thisSoCon->RxSsCopiedLength == soConBufferData.length)
         {
-          SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_DONE;
+          thisSoCon->RxSsState = SOAD_SS_DONE;
         }else
         {
           //copy on going
-          SoAd_DynSoConArr[SoConId].RxSsCopiedLength = copiedLength;
-          SoAd_DynSoConArr[SoConId].RxSsLastUpperAskedSize = upperBufferSizeAsked;
-          SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_COPYING;
+          thisSoCon->RxSsLastUpperAskedSize = upperBufferSizeAsked;
+          thisSoCon->RxSsState = SOAD_SS_COPYING;
         }
       }else
       {
@@ -816,8 +813,8 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
     case SOAD_SS_DONE:
       //Copy done -> UpperTpRxIndication
       SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
-      soad_RemoveFirstElementSoconQueue(SoConId);
-      SoAd_DynSoConArr[SoConId].RxSsState = SOAD_SS_STOP;
+      soad_RemoveSoConQueueFirstElement(&(thisSoCon->RxQueue));
+      thisSoCon->RxSsState = SOAD_SS_STOP;
       break;
     case SOAD_SS_STOP:
       break;
@@ -832,18 +829,47 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
   }
 }
 
-static void soad_EnQueueSoconBuffer(SoAd_SoConIdType SoConId, SoAd_SoConBuffer_t *SoConData)
-{
-
+void soad_InitializeSoConQueue(SoAd_SocketBufferQueue_t *queue) {
+    queue->front = 0;
+    queue->rear = -1;
+    queue->size = 0;
 }
 
-static SoAd_SoConBuffer_t *soad_GetFirstElementSoconQueue(SoAd_SoConIdType SoConId)
-{
-
+boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue) {
+    return queue->size == SOAD_SOCON_QUEUE_DEPTH;
 }
 
-static void soad_RemoveFirstElementSoconQueue(SoAd_SoConIdType SoConId)
-{
+boolean soad_isQueueEmpty(SoAd_SocketBufferQueue_t *queue) {
+    return queue->size == 0;
+}
 
+boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *buffer) {
+    if (soad_isSoConQueueFull(queue)) {
+        return FALSE; // Queue is full, unable to enqueue
+    }
+
+    queue->rear = (queue->rear + 1) % SOAD_SOCON_QUEUE_DEPTH;
+    queue->Buffer[queue->rear] = *buffer;
+    queue->size++;
+    return TRUE;
+}
+
+boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *dest) {
+    if (soad_isQueueEmpty(queue)) {
+        return FALSE; // Queue is empty, unable to get first element
+    }
+
+    *dest = queue->Buffer[queue->front];
+    return TRUE;
+}
+
+boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue) {
+    if (soad_isQueueEmpty(queue)) {
+        return FALSE; // Queue is empty, unable to remove first element
+    }
+
+    queue->front = (queue->front + 1) % SOAD_SOCON_QUEUE_DEPTH;
+    queue->size--;
+    return TRUE;
 }
 /* ***************************** [ FUNCTIONS ] ****************************** */

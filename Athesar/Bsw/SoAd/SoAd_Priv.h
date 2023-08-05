@@ -245,10 +245,10 @@ typedef struct _SoAd_SocketBuffer_t
 } SoAd_SoConBuffer_t;
 
 typedef struct _SoAd_SocketBufferQueue_t {
-  SoAd_SoConBuffer_t buffer[SOAD_SOCON_QUEUE_DEPTH];
-  uint32_t front;
-  uint32_t rear;
-  uint32_t count;
+  SoAd_SoConBuffer_t Buffer[SOAD_SOCON_QUEUE_DEPTH];
+  uint32 front;
+  uint32 rear;
+  uint32 size;
 } SoAd_SocketBufferQueue_t;
 
 typedef enum _SoAd_TpSessionState_t
@@ -268,16 +268,14 @@ typedef struct _SoAdSock_t
   } W32Thread;
   SOCKET W32Sock;
   SoAd_W32SocketState_t W32SockState;
-  SoAd_SoConBuffer_t *TcpRxBuff;
-  SoAd_SoConBuffer_t *TcpTxBuff;
-  char *RxBuff;
-  char *TxBuff;
+  /* for SoAd queue, copy session */
   uint32_t RxSsCopiedLength;
   uint32_t RxSsLastUpperAskedSize;
   SoAd_TpSessionState_t TxSsState;
   SoAd_TpSessionState_t RxSsState;
   SoAd_SocketBufferQueue_t TxQueue;
   SoAd_SocketBufferQueue_t RxQueue;
+  /* dynamic remote address */
   char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
   uint32 RemotePort;
   //AUTOSAR

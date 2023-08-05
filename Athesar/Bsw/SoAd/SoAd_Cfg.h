@@ -18,9 +18,7 @@
 
 #define SOAD_CFG_NUM_SOCON                            3 //SoAd_SoConArrSize
 
-#define SOAD_CFG_SOCON_RX_BUFF_SIZE                   256
-
-#define SOAD_CFG_SOCON_TX_BUFF_SIZE                   256
+#define SOAD_CFG_SOCON_TRX_BUFF_SIZE                  256
 
 #define SOAD_CFGDET_USED                              STD_OFF
 

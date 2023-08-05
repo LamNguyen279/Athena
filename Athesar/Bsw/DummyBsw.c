@@ -7,6 +7,8 @@
 #define UNUSED(variable) (void) variable
 #endif
 
+#define DOIP_RANDOM_BUFF_SIZE 10
+
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
@@ -21,6 +23,7 @@ void DoIP_SoAdIfRxIndication(
 
   DoIP_SoAdIfRxIndicationCtn++;
 
+  printf("----------------------------------------------------------------\n");
   printf("DoIP_SoAdIfRxIndication() %d \n", DoIP_SoAdIfRxIndicationCtn);
   printf("RxPduId = %d \n", RxPduId);
   printf("SduLength = %d \n", PduInfoPtr->SduLength);
@@ -38,6 +41,7 @@ void DoIP_SoConModeChg(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
 {
   DoIP_SoConModeChgCtn++;
 
+  printf("----------------------------------------------------------------\n");
   printf("DoIP_SoConModeChg() %d \n", DoIP_SoConModeChgCtn);
   printf("SoConId = %d \n", SoConId);
   printf("Mode = %s \n", SOAD_SOCON_MODE_TO_STR(Mode));
@@ -58,42 +62,84 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
 {
   DoIP_SoAdTpStartOfReceptionCtn++;
 
-  char buffer[256];
-
-  memset(&buffer[0], 0, sizeof(buffer));
-  memcpy(&buffer[0], info->SduDataPtr, info->SduLength);
-
-  buffer[info->SduLength] = "\0";
-
+  printf("----------------------------------------------------------------\n");
   printf("DoIP_SoAdTpStartOfReception() %d \n", DoIP_SoAdTpStartOfReceptionCtn);
   printf("RxPduId = %d \n", id);
-  printf("SduLength = %d \n", info->SduLength);
-  printf("SduDataPtr = %s \n", &buffer);
+  printf("info->SduLength = %d \n", info->SduLength);
+
+  if(info->SduDataPtr != NULL)
+  {
+    printf("info->SduDataPtr = %s \n", info->SduDataPtr);
+
+  }else
+  {
+    printf("info->SduDataPtr = %s \n", "NULL_PTR");
+  }
+
+  printf("TpSduLength = %d \n", TpSduLength);
 
   fflush(stdout);
 
   if(info->SduLength == 0)
   {
-    *bufferSizePtr = (rand() % 10);
+    *bufferSizePtr = (rand() % DOIP_RANDOM_BUFF_SIZE);
 
     return BUFREQ_OK;
   }
 }
 
-uint8 DoIP_SoAdTpCopyRxDataBuff[1024];
+uint8 DoIP_SoAdTpCopyRxDataBuff[10][256];
 uint32 DoIP_SoAdTpCopyRxDataCopyIdx = 0;
+uint32 DoIP_SoAdTpCopyRxDataCtn = 0;
 BufReq_ReturnType DoIP_SoAdTpCopyRxData(
   PduIdType id,
   const PduInfoType *info,
   PduLengthType *bufferSizePtr)
 {
 
-  memcpy(&DoIP_SoAdTpCopyRxDataBuff[DoIP_SoAdTpCopyRxDataCopyIdx], info->SduDataPtr, info->SduLength);
+  DoIP_SoAdTpCopyRxDataCtn++;
 
-  if(info->SduLength == 0)
-  {
-    *bufferSizePtr = (rand() % 10);
+  memcpy(&DoIP_SoAdTpCopyRxDataBuff[id][DoIP_SoAdTpCopyRxDataCopyIdx], info->SduDataPtr, info->SduLength);
 
-    return BUFREQ_OK;
-  }
+  DoIP_SoAdTpCopyRxDataCopyIdx += info->SduLength;
+
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_SoAdTpCopyRxData() %d \n", DoIP_SoAdTpCopyRxDataCtn);
+  printf("RxPduId = %d \n", id);
+  printf("info->SduLength = %d \n", info->SduLength);
+
+//  if(info->SduDataPtr != NULL)
+//  {
+//    printf("info->SduDataPtr = %s \n", info->SduDataPtr);
+//
+//  }else
+//  {
+//    printf("info->SduDataPtr = %s \n", "NULL_PTR");
+//  }
+
+  fflush(stdout);
+
+  *bufferSizePtr = (rand() % DOIP_RANDOM_BUFF_SIZE);
+
+  return BUFREQ_OK;
+}
+
+uint32 DoIP_SoAdTpRxIndicationCtn = 0;
+void DoIP_SoAdTpRxIndication(
+  PduIdType id,
+  Std_ReturnType result)
+{
+  DoIP_SoAdTpRxIndicationCtn++;
+
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_SoAdTpRxIndication() %d \n", DoIP_SoAdTpRxIndicationCtn);
+  printf("id = %d \n", id);
+  printf("result = %d \n", result);
+
+  printf("CopiedBuffer: %s \n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
+
+  memset(&DoIP_SoAdTpCopyRxDataBuff[id][0], 0, sizeof(DoIP_SoAdTpCopyRxDataBuff[0]));
+  DoIP_SoAdTpCopyRxDataCopyIdx = 0;
+
+  fflush(stdout);
 }
