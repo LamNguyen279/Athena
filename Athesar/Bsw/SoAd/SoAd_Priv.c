@@ -194,6 +194,119 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
   }
 }
 
+Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
+{
+  int iResult = -1;
+
+  Std_ReturnType ret = E_OK;
+
+  const SoAd_CfgPduRouteDest_t *SoAdPduRouteDest;
+
+  const SoAd_CfgPduRoute_t *pduRoute;
+
+  uint32 SoAdPduRouteDestIdx;
+
+  pduRoute = &SoAd_PduRouteArr[TxPduId];
+
+  SOAD_W32_CHECK_ENV(ret);
+
+  SOCKET sendSocket = SOAD_W32_INVALID_SOCKET;
+
+  SoAd_SoConIdType soConIdx;
+
+  SoAd_SoCon_t *thisSoCon;
+
+  const SoAd_CfgSoConGrp_t *thisSoConGrCfg;
+
+  const SoAd_CfgSoCon_t *thisSoConCfg;
+
+  struct sockaddr_in recvAddr;
+
+  if(ret == E_OK)
+  {
+    SoAdPduRouteDestIdx = 0;
+    while((SoAdPduRouteDestIdx < pduRoute->SoAdPduRouteDestCtn) &&
+        ret == E_OK)
+    {
+      SoAdPduRouteDest = &SoAd_PduRouteDestArr[SoAdPduRouteDestIdx];
+
+      //send to GROUP that PduDest refer to
+      if(SoAdPduRouteDest->SoAdTxSoConGrIdx != SOAD_INVALID_SOCON_GROUP)
+      {
+        //send on All active SOCON in group
+        soConIdx = 0;
+        while(soConIdx < SoAd_SoConArrSize)
+        {
+          thisSoCon = &SoAd_DynSoConArr[soConIdx];
+          thisSoConGrCfg = &SOAD_GET_SOCON_GROUP(soConIdx);
+          thisSoConCfg = &SoAd_SoConArr[soConIdx];
+
+          if(SoAd_DynSoConArr[soConIdx].SoAdSoConState == SOAD_SOCON_ONLINE)
+          {
+            //check that SOCON belongs to this group
+            if(SoAd_SoConArr[soConIdx].SoConGrIdx == SoAdPduRouteDest->SoAdTxSoConGrIdx)
+            {
+              sendSocket = SoAd_DynSoConArr[SoAdPduRouteDest->SoAdTxSoConIdx].W32Sock;
+
+              iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
+
+              if (iResult == SOCKET_ERROR) {
+                  closesocket(sendSocket);
+                  ret = E_NOT_OK;
+              }
+            }
+          }
+          soConIdx++;
+        }
+      }else if(SoAdPduRouteDest->SoAdTxSoConIdx != SOAD_INVALID_SOCON)
+      {
+        thisSoCon = &SoAd_DynSoConArr[SoAdPduRouteDest->SoAdTxSoConIdx ];
+        thisSoConGrCfg = &SOAD_GET_SOCON_GROUP(SoAdPduRouteDest->SoAdTxSoConIdx );
+        thisSoConCfg = &SoAd_SoConArr[SoAdPduRouteDest->SoAdTxSoConIdx ];
+
+        sendSocket = thisSoCon->W32Sock;
+
+        if(SOAD_IS_UDP_SOCON(soConIdx))
+        {
+          recvAddr.sin_family = thisSoConGrCfg->W32AfType;
+          recvAddr.sin_port = htons(thisSoConCfg->RemotePort);
+          recvAddr.sin_addr.s_addr = inet_addr(thisSoConCfg->RemoteIpAddress);
+
+          iResult = sendto(
+              sendSocket, (char *)(PduInfo->SduDataPtr),
+              PduInfo->SduLength, 0,  (SOCKADDR *)&recvAddr, sizeof(recvAddr));
+
+          if (iResult == SOCKET_ERROR) {
+              printf("send failed with error: %d \n", WSAGetLastError());
+              fflush(_REENT->_stdout);
+              closesocket(sendSocket);
+              ret = E_NOT_OK;
+          }
+        }else
+        {
+          //TCP
+          iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
+
+          if (iResult == SOCKET_ERROR) {
+              printf("send failed with error: %d \n", WSAGetLastError());
+              fflush(_REENT->_stdout);
+              closesocket(sendSocket);
+              ret = E_NOT_OK;
+          }
+        }
+      }else
+      {
+        //No SOCON reference, NO SOCON GROUP reference -> invalid CONFIG
+      }
+
+      SoAdPduRouteDestIdx++;
+    }
+  }
+
+  return ret;
+}
+
+//static function
 static void soad_HandleSoConStateNew(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_NOT_OK;
@@ -410,6 +523,7 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
 
   while(1)
   {
+    memset(&rxBuffer[0], 0, SOAD_CFG_SOCON_TRX_BUFF_SIZE);
     resultLength = recv(thisSoSon->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_TRX_BUFF_SIZE, 0);
 
     if(resultLength != -1)
@@ -459,13 +573,11 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
         }
       }else
       {
-        //Unknown
-        break;
+        //Unknown protocol
       }
     }else
     {
       //Exceed SOAD_CFG_SOCON_RX_BUFF_SIZE, TODO: handle ?
-      break;
     }
   }
 }
@@ -561,8 +673,8 @@ static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *
 
   for(soconIdx = 0; soconIdx < SoAd_SoConArrSize; soconIdx++)
   {
-    if((E_OK == soad_IpCmp(&(SoAd_SoConArr[soconIdx].SoAdSocketRemoteIpAddress[0]), ip, SOAD_IPV4_ADD_SIZE)) &&
-        SoAd_SoConArr[soconIdx].SoAdSocketRemotePort == port)
+    if((E_OK == soad_IpCmp(&(SoAd_SoConArr[soconIdx].RemoteIpAddress[0]), ip, SOAD_IPV4_ADD_SIZE)) &&
+        SoAd_SoConArr[soconIdx].RemotePort == port)
     {
       *retSocon = soconIdx;
       ret = E_OK;
@@ -589,8 +701,8 @@ static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
 
   struct sockaddr_in clientService;
   clientService.sin_family = soConGrCfg->W32AfType;
-  clientService.sin_addr.s_addr = inet_addr(soConCfg->SoAdSocketRemoteIpAddress);
-  clientService.sin_port = htons(soConCfg->SoAdSocketRemotePort);
+  clientService.sin_addr.s_addr = inet_addr(soConCfg->RemoteIpAddress);
+  clientService.sin_port = htons(soConCfg->RemotePort);
 
   SOAD_W32_CHECK_ENV(ret);
 
@@ -688,10 +800,10 @@ static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeT
 
     SOAD_GET_UPPER_FNCTBL_BY_PDUROUTEDEST(pduroutedest).UpperSoConModeChg(SoConId, Mode);
 
-    SoAd_DynSoConArr[SoConId].SoAdSoConState = Mode;
-
     pduroutedestCtn++;
   }
+
+  SoAd_DynSoConArr[SoConId].SoAdSoConState = Mode;
 }
 
 static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId)
@@ -739,10 +851,10 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
       {
         if(upperBufferSizeAsked > 0)
         {
-          pduInfo.SduLength = upperBufferSizeAsked;
+          pduInfo.SduLength = (upperBufferSizeAsked >= soConBufferData.length) ? soConBufferData.length : upperBufferSizeAsked;
           pduInfo.SduDataPtr = &(soConBufferData.data[0]);
 
-          thisSoCon->RxSsCopiedLength += upperBufferSizeAsked;
+          thisSoCon->RxSsCopiedLength += pduInfo.SduLength;
 
           /* call Up>_[SoAd][Tp]CopyRxData */
           upperBufferReqRet = SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpCopyRxData(
@@ -755,11 +867,8 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
             if(thisSoCon->RxSsCopiedLength == soConBufferData.length)
             {
-              //Copy done -> UpperTpRxIndication
-              SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
+              //Copy done
               thisSoCon->RxSsState = SOAD_SS_DONE;
-
-              soad_RemoveSoConQueueFirstElement(&(thisSoCon->RxQueue));
             }else
             {
               //copy on going
@@ -827,7 +936,7 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
   if(upperBufferReqRet == BUFREQ_E_NOT_OK)
   {
-    /* TODO: SWS_SoAd_00570 -> close socket */
+    /* SWS_SoAd_00570 -> close socket */
     SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
   }
 }

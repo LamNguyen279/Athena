@@ -54,8 +54,34 @@ void SoAd_LocalIpAddrAssignmentChg(TcpIp_LocalAddrIdType IpAddrId, TcpIp_IpAddrS
 
 }
 
-Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr) {
-  Std_ReturnType ret = E_NOT_OK;
+Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
+{
+
+  Std_ReturnType ret = E_OK;
+
+  if(TxPduId >= SoAd_PduRouteArrSize)
+  {
+    //TODO: raise DET
+    ret = E_NOT_OK;
+  }else
+  {
+    if(SoAd_PduRouteArr[TxPduId].SoAdTxUpperLayerType != SOAD_UPPER_IF)
+    {
+      ret = E_NOT_OK;
+      //TODO raise DET
+    }
+  }
+
+  if(PduInfoPtr == NULL_PTR)
+  {
+    //TODO: raise DET
+    ret = E_NOT_OK;
+  }
+
+  if(ret == E_OK)
+  {
+    ret = _SoAd_IfPduFanOut(TxPduId, PduInfoPtr);
+  }
 
   return ret;
 }

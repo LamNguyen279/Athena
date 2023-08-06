@@ -231,8 +231,8 @@ typedef struct _SoAd_CfgSocketRoute_t
 typedef struct _SoAd_CfgSoCon_t
 {
   /* SoAdSocketId -> Index of array */
-  sint8 SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE]; /* remote address */
-  uint32 SoAdSocketRemotePort; /* remote port */
+  sint8 RemoteIpAddress[SOAD_IPV4_ADD_SIZE]; /* remote address */
+  uint32 RemotePort; /* remote port */
   uint32 SoConGrIdx; /* get local SoCon Group properties by this Id */
   const uint32 *PduRouteDestList; /* holds all PduRouteDest that refer to this SoCon */
   const uint32 PduRouteDestListSize; /* PduRouteDestReferredListCtn */
@@ -300,10 +300,11 @@ typedef struct _SoAdSoConGr_t
 } SoAdSoConGr_t;
 
 /* ***************************** [ DECLARES  ] ****************************** */
-void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId);
-void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId);
-void _SoAd_InitSocon(SoAd_SoConIdType SoConId);
-void _SoAd_InitSoConGroup(uint32 SoConGr);
+extern void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId);
+extern void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId);
+extern void _SoAd_InitSocon(SoAd_SoConIdType SoConId);
+extern void _SoAd_InitSoConGroup(uint32 SoConGr);
+extern Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

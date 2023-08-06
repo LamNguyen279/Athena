@@ -61,6 +61,13 @@ uint32 OsTask_1msCtn = 0;
 void OsTask_1ms(void)
 {
   SoAd_SoConIdType testGetSoConId;
+  Std_ReturnType ret = E_OK;
+  PduInfoType pduInfo;
+
+  char txBuff[1500];
+
+  pduInfo.SduDataPtr = &txBuff[0];
+  pduInfo.SduLength = sizeof(txBuff);
 
   while(1)
   {
@@ -78,6 +85,10 @@ void OsTask_1ms(void)
       SoAd_GetSoConId(TestTxPduId, &testGetSoConId);
       TestCaseIdx = -1;
       break;
+    case 4:
+      ret = SoAd_IfTransmit(TestTxPduId, &pduInfo);
+      TestCaseIdx = -1;
+      break;
     default:
       break;
     }
@@ -90,6 +101,8 @@ void OsTask_1ms(void)
 
       vEventSet( BswMainTask_10ms, OsEvent_BswMainFunction_10ms );
     }
+
+    vTaskTicksDelay(1);
   }
 }
 

@@ -7,7 +7,7 @@
 #define UNUSED(variable) (void) variable
 #endif
 
-#define DOIP_RANDOM_BUFF_SIZE 30
+#define DOIP_RANDOM_BUFF_SIZE 50
 
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
@@ -124,7 +124,8 @@ void DoIP_SoAdTpRxIndication(
   printf("id = %d \n", id);
   printf("result = %d \n", result);
 
-  printf("CopiedBuffer:\n%s\n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
+  printf("Copied Size: %d\n", DoIP_SoAdTpCopyRxDataCopyIdx);
+  printf("Copied Buffer:\n%s\n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
 
   memset(&DoIP_SoAdTpCopyRxDataBuff[id][0], 0, sizeof(DoIP_SoAdTpCopyRxDataBuff[0]));
   DoIP_SoAdTpCopyRxDataCopyIdx = 0;
