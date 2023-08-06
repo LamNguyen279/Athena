@@ -210,37 +210,35 @@ static Std_ReturnType soad_SendSoCon(SoAd_SoConIdType SoConId, PduInfoType *PduI
 
   SOCKET sendSocket = SoAd_DynSoConArr[SoConId].W32Sock;
 
-  if(SOAD_IS_UDP_SOCON(SoConId))
+  if(SoAd_DynSoConArr[SoConId].SoAdSoConState == SOAD_SOCON_ONLINE)
   {
-    recvAddr.sin_family = thisSoConGrCfg->W32AfType;
-    recvAddr.sin_port = htons(thisSoConCfg->RemotePort);
-    recvAddr.sin_addr.s_addr = inet_addr(thisSoConCfg->RemoteIpAddress);
-
-    iResult = sendto(
-        sendSocket, (char *)(PduInfo->SduDataPtr),
-        PduInfo->SduLength, 0,  (SOCKADDR *)&recvAddr, sizeof(recvAddr));
-
-    if (iResult == SOCKET_ERROR) {
-        printf("send failed with error: %d \n", WSAGetLastError());
-        fflush(_REENT->_stdout);
-        ret = E_NOT_OK;
-    }
-  }else
-  {
-    //TCP
-    if(SoAd_DynSoConArr[SoConId].SoAdSoConState == SOAD_SOCON_ONLINE)
+    if(SOAD_IS_UDP_SOCON(SoConId))
     {
-      iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
+      recvAddr.sin_family = thisSoConGrCfg->W32AfType;
+      recvAddr.sin_port = htons(thisSoConCfg->RemotePort);
+      recvAddr.sin_addr.s_addr = inet_addr(thisSoConCfg->RemoteIpAddress);
 
-      if (iResult == SOCKET_ERROR) {
-          printf("send failed with error: %d \n", WSAGetLastError());
-          fflush(_REENT->_stdout);
+      iResult = sendto(
+          sendSocket, (char *)(PduInfo->SduDataPtr),
+          PduInfo->SduLength, 0,  (SOCKADDR *)&recvAddr, sizeof(recvAddr));
+
+      if (iResult == SOCKET_ERROR)
+      {
           ret = E_NOT_OK;
       }
     }else
     {
-      ret = E_NOT_OK;
+      //TCP
+      iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
+
+      if (iResult == SOCKET_ERROR)
+      {
+          ret = E_NOT_OK;
+      }
     }
+  }else
+  {
+    ret = E_NOT_OK;
   }
 
   return ret;
@@ -568,11 +566,12 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
         }
       }else
       {
-        //Unknown protocol
+        SOAD_LOG("Invalid protocol!!!");
       }
     }else
     {
       //Exceed SOAD_CFG_SOCON_RX_BUFF_SIZE, TODO: handle ?
+      SOAD_LOG("Exceed SOAD_CFG_SOCON_RX_BUFF_SIZE");
     }
   }
 }
@@ -650,10 +649,14 @@ static void soad_SocketListenRoutine(SoAdSoConGr_t *SoConGr)
           ResumeThread(threadHdl);
         }else
         {
+          SOAD_LOG("failed to create thread");
           break;
-          //TODO: handle ?
         }
       }
+    }else
+    {
+      SOAD_LOG_PAR("Refuse Connection from: %s", inet_ntoa(addr.sin_addr));
+      SOAD_LOG_PAR("Refuse Connection from: %d", ntohs(addr.sin_port));
     }
   }
 }
@@ -707,10 +710,7 @@ static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
     {
       iResult = connect(thisSoAdSock->W32Sock, (SOCKADDR *) & clientService, sizeof (clientService));
       if (iResult == SOCKET_ERROR) {
-//          iResult = closesocket(thisSoAdSock->W32Sock);
-//          if (iResult == SOCKET_ERROR)
-//          WSACleanup();
-//          return 1;
+
         Sleep(SOAD_CFG_TCP_CLT_TX_SYNC_DELAY_MS);
 
       }else
@@ -737,8 +737,8 @@ static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
           break;
         }else
         {
+          SOAD_LOG("failed to create thread");
           break;
-          //TODO: handle ?
         }
       }
     }
@@ -878,6 +878,7 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
         }else
         {
           /* No buffer size in upper, do nothing */
+          SOAD_LOG("No buffer size in upper");
         }
       }else
       {

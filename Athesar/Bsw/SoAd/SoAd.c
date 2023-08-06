@@ -162,10 +162,17 @@ Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *
   return ret;
 }
 
-Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
+Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId)
+{
   Std_ReturnType ret = E_OK;
 
-  ret = soad_validateSoconId(SoConId);
+  if(SoConId >= SoAd_SoConArrSize)
+  {
+    ret = E_NOT_OK;
+  }else
+  {
+    //TODO: raise DET
+  }
 
   if(ret == E_OK)
   {
@@ -184,7 +191,13 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
 Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   Std_ReturnType ret = E_NOT_OK;
 
-  ret = soad_validateSoconId(SoConId);
+  if(SoConId >= SoAd_SoConArrSize)
+  {
+    ret = E_NOT_OK;
+  }else
+  {
+    //TODO: raise DET
+  }
 
   if(ret == E_OK)
   {
@@ -196,19 +209,6 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   }else
   {
     //TODO: raise DET
-  }
-
-  return ret;
-}
-
-
-static Std_ReturnType soad_validateSoconId(SoAd_SoConIdType SoconId)
-{
-  Std_ReturnType ret = E_OK;
-
-  if(SoconId >= SoAd_SoConArrSize)
-  {
-    ret = E_NOT_OK;
   }
 
   return ret;

@@ -27,6 +27,23 @@
 #define SOAD_BIG_ENDIAN             BIG_ENDIAN
 #define SOAD_LITTLE_ENDIAN          LITTLE_ENDIAN
 
+#ifdef SOAD_DEBUG
+#include "stdio.h"
+#define SOAD_LOG(SomeString) \
+  printf("LINE: %d, FUNC: %s, LOG: ", __LINE__, __func__); \
+  printf((SomeString)); \
+  printf("\n"); \
+  fflush(_REENT->_stdout)
+
+#define SOAD_LOG_PAR(SomeString, SomeThing) \
+  printf("LINE: %d, FUNC: %s, LOG: ", __LINE__, __func__); \
+  printf((SomeString), (SomeThing)); \
+  printf("\n"); \
+  fflush(_REENT->_stdout)
+#else
+#define SOAD_CONSOLE_LOG(someString, SomeThing)
+#endif
+
 #define SOAD_TRUE                   STD_ON
 #define SOAD_FALSE                  STD_OFF
 
