@@ -7,27 +7,20 @@
 #define UNUSED(variable) (void) variable
 #endif
 
-#define DOIP_RANDOM_BUFF_SIZE 20
+#define DOIP_RANDOM_BUFF_SIZE 30
 
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
   PduInfoType *PduInfoPtr)
 {
-  char buffer[256];
-
-  memset(&buffer[0], 0, sizeof(buffer));
-  memcpy(&buffer[0], PduInfoPtr->SduDataPtr, PduInfoPtr->SduLength);
-
-  buffer[PduInfoPtr->SduLength] = "\0";
-
   DoIP_SoAdIfRxIndicationCtn++;
 
   printf("----------------------------------------------------------------\n");
   printf("DoIP_SoAdIfRxIndication() %d \n", DoIP_SoAdIfRxIndicationCtn);
   printf("RxPduId = %d \n", RxPduId);
   printf("SduLength = %d \n", PduInfoPtr->SduLength);
-  printf("SduDataPtr = %s \n", &buffer);
+  printf("SduDataPtr = %s \n", PduInfoPtr->SduDataPtr);
   fflush(stdout);
   return;
 }
@@ -131,7 +124,7 @@ void DoIP_SoAdTpRxIndication(
   printf("id = %d \n", id);
   printf("result = %d \n", result);
 
-  printf("CopiedBuffer: %s \n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
+  printf("CopiedBuffer:\n%s\n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
 
   memset(&DoIP_SoAdTpCopyRxDataBuff[id][0], 0, sizeof(DoIP_SoAdTpCopyRxDataBuff[0]));
   DoIP_SoAdTpCopyRxDataCopyIdx = 0;

@@ -16,7 +16,7 @@
 /* ***************************** [ DECLARES  ] ****************************** */
 uint32_t SoAd_DynSoConArrCtn;
 
-SoAdSoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
+SoAd_SoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
 SoAdSoConGr_t SoAd_DynSoConGrArr[SOAD_CFG_NUM_SOCON_GROUP];
 
 SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[];

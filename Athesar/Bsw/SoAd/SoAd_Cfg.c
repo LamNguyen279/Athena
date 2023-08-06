@@ -120,7 +120,6 @@ const uint32 SoAd_RoutingGroupArrSize = SOAD_GET_ARRAY_SIZE(SoAd_RoutingGroupArr
 const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 {
     {
-        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
         SOAD_FALSE,/* SoAdPduHeaderEnable */
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
@@ -136,7 +135,6 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
     {
-        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
         SOAD_FALSE,/* SoAdPduHeaderEnable */
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
@@ -152,7 +150,6 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
     {
-        SOAD_UPPER_DOIP, /*SoAdUpperLayer */
         SOAD_FALSE,/* SoAdPduHeaderEnable */
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */

@@ -10,6 +10,7 @@
 
 typedef uint32_t vEventMask_t;
 
+extern void vEventInit(void);
 extern void vEventSet(vTaskHandler_t *task, vEventMask_t eventMask);
 extern void vEventGet(vTaskHandler_t *task, vEventMask_t *eventValue);
 extern void vEventWait(vEventMask_t eventMask);

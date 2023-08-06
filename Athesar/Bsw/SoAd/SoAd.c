@@ -14,6 +14,7 @@
 /* ***************************** [ DECLARES  ] ****************************** */
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
+static Std_ReturnType soad_validateSoconId(SoAd_SoConIdType SoconId);
 /* ***************************** [ FUNCTIONS ] ****************************** */
 void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
 
@@ -67,7 +68,50 @@ Std_ReturnType SoAd_TpTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
 
 Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) {
 
-  Std_ReturnType ret = E_NOT_OK;
+  Std_ReturnType ret = E_OK;
+
+  const SoAd_CfgPduRouteDest_t *SoAdPduRouteDest;
+
+  const SoAd_CfgPduRoute_t *pduRoute;
+
+  if(TxPduId >= SoAd_PduRouteArrSize)
+  {
+//    TODO: SOAD_RAISE_DEV_ERROR();
+    ret = E_NOT_OK;
+  }
+
+  if(SoConIdPtr == NULL_PTR)
+  {
+    //TODO: raise dev
+    ret = E_NOT_OK;
+  }
+
+  if(ret == E_OK)
+  {
+    pduRoute = &SoAd_PduRouteArr[TxPduId];
+
+    if(pduRoute->SoAdPduRouteDestCtn == 1)
+    {
+      SoAdPduRouteDest = &SoAd_PduRouteDestArr[pduRoute->SoAdPduRouteDestBase];
+
+      if(SoAdPduRouteDest->SoAdTxSoConGrIdx == SOAD_INVALID_SOCON_GROUP)
+      {
+        if(SoAdPduRouteDest->SoAdTxSoConIdx != SOAD_INVALID_SOCON)
+        {
+          *SoConIdPtr = (SoAdPduRouteDest->SoAdTxSoConIdx);
+        }else
+        {
+          //no SOCON in SoAdPduRouteDest -> invalid CONFIG
+        }
+      }else
+      {
+        //call SoAd_GetSoConId in case fan out PDU
+      }
+    }else
+    {
+      //call SoAd_GetSoConId in case fan out PDU
+    }
+  }
 
   return ret;
 }
@@ -95,9 +139,17 @@ Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *
 Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
   Std_ReturnType ret = E_OK;
 
-  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
+  ret = soad_validateSoconId(SoConId);
+
+  if(ret == E_OK)
   {
-    SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
+    if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
+    {
+      SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
+    }
+  }else
+  {
+    //TODO: raise DET
   }
 
   return ret;
@@ -106,10 +158,31 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId) {
 Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   Std_ReturnType ret = E_NOT_OK;
 
-  if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE))
+  ret = soad_validateSoconId(SoConId);
+
+  if(ret == E_OK)
   {
-    SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
-    SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
+    if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE))
+    {
+      SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
+      SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
+    }
+  }else
+  {
+    //TODO: raise DET
+  }
+
+  return ret;
+}
+
+
+static Std_ReturnType soad_validateSoconId(SoAd_SoConIdType SoconId)
+{
+  Std_ReturnType ret = E_OK;
+
+  if(SoconId >= SoAd_SoConArrSize)
+  {
+    ret = E_NOT_OK;
   }
 
   return ret;

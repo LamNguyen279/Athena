@@ -17,9 +17,9 @@
 
 #include "SoAd.h"
 
-vTaskHandler_t *PostOsStartupTask;
-vTaskHandler_t *BswMainTask_10ms;
-vTaskHandler_t *Task_1ms;
+volatile vTaskHandler_t *PostOsStartupTask;
+volatile vTaskHandler_t *BswMainTask_10ms;
+volatile vTaskHandler_t *Task_1ms;
 
 void OsIdleHook()
 {
@@ -54,20 +54,28 @@ void OsTask_BswMain_10ms(void)
 }
 
 uint32 TestCaseIdx = -1;
-uint32 TestSoConIdx = 0;
+uint32 TestSoConIdx = -1;
+uint32 TestTxPduId = -1;
+
 uint32 OsTask_1msCtn = 0;
 void OsTask_1ms(void)
 {
+  SoAd_SoConIdType testGetSoConId;
+
   while(1)
   {
     switch(TestCaseIdx)
     {
-    case 0:
+    case 1:
       SoAd_OpenSoCon(TestSoConIdx);
       TestCaseIdx = -1;
       break;
-    case 1:
+    case 2:
       SoAd_CloseSoCon(TestSoConIdx, 0);
+      TestCaseIdx = -1;
+      break;
+    case 3:
+      SoAd_GetSoConId(TestTxPduId, &testGetSoConId);
       TestCaseIdx = -1;
       break;
     default:
@@ -100,13 +108,13 @@ int main()
 
   vTaskInit();
   vSchedulerInit();
-
+  vEventInit();
 
   PostOsStartupTask = vTaskCreate(OsTask_PostOsStartup, 255, VTASK_PREEMP_NON);
 
-  BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_NON);
+  BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_FULL);
 
-  Task_1ms = vTaskCreate(OsTask_1ms, 5, VTASK_PREEMP_FULL);
+  Task_1ms = vTaskCreate(OsTask_1ms, 0, VTASK_PREEMP_FULL);
 
   vTaskActivate(PostOsStartupTask);
 

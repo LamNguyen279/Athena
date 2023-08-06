@@ -18,9 +18,9 @@
 #include "ComStack_Types.h"
 #include "SoAd.h"
 /* ***************************** [ MACROS    ] ****************************** */
-#define SOAD_SOCON_BUFF_SIZE                      256
-#define SOAD_SOCON_QUEUE_DEPTH                    10
-
+#define SOAD_SOCON_BUFF_SIZE                      1500
+#define SOAD_SOCON_QUEUE_DEPTH                    50
+#define SOAD_SOCON_THREAD_STACK                   15000
 //coding utilities
 #define SOAD_GET_ARRAY_SIZE(array)  ( sizeof( (array) ) / sizeof( (array[0]) ) )
 
@@ -199,7 +199,6 @@ typedef struct _SoAd_CfgPduRoute_t
 /* SocketConnectionGroup, TODO: Generate to one array */
 typedef struct _SoAd_CfgSoConGrp_t
 {
-  SoAd_Upper_t SoAdUpperLayer;
   boolean SoAdPduHeaderEnable;
   boolean SoAdSocketAutomaticSoConSetup;
   boolean SoAdSocketFramePriority;
@@ -229,7 +228,7 @@ typedef struct _SoAd_CfgSocketRoute_t
 } SoAd_CfgSocketRoute_t;
 
 /* SoAd Socket Connection */
-typedef struct _SoAd_SoCon_t
+typedef struct _SoAd_CfgSoCon_t
 {
   /* SoAdSocketId -> Index of array */
   sint8 SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE]; /* remote address */
@@ -263,7 +262,7 @@ typedef enum _SoAd_TpSessionState_t
   SOAD_SS_DONE
 } SoAd_TpSessionState_t;
 
-typedef struct _SoAdSock_t
+typedef struct _SoAd_SoCon_t
 {
   struct
   {
@@ -286,9 +285,9 @@ typedef struct _SoAdSock_t
   uint32 RequestMask;
   SoAd_SoConIdType W32SoAdSoConId;
   SoAd_SoConModeType SoAdSoConState;
-} SoAdSoCon_t;
+} SoAd_SoCon_t;
 
-typedef struct _SoAdSoConGrHandler_t
+typedef struct _SoAdSoConGr_t
 {
   //W32
   struct

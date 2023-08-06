@@ -8,9 +8,19 @@
 #include "vEvent.h"
 #include "vScheduler.h"
 
+static void *_vEventMutex;
+
+void vEventInit()
+{
+  _vEventMutex = CreateMutex(VOS_NULL, VOS_FALSE, VOS_NULL);
+}
+
 void vEventSet(vTaskHandler_t *task, vEventMask_t eventMask)
 {
+  WaitForSingleObject( _vEventMutex, INFINITE );
   //check task are in waiting event state
+  vSchedulerWaitForSchedulePoint();
+
   if((task->State == VTASK_STATE_WAIT) && (task->SubState == VTASK_SUBSTATE_WAIT_EVENT))
   {
     //check task are waiting for this event
@@ -24,6 +34,8 @@ void vEventSet(vTaskHandler_t *task, vEventMask_t eventMask)
       vSchedulerWaitForSchedulePoint();
     }
   }
+
+  ReleaseMutex( _vEventMutex );
 }
 
 void vEventGet(vTaskHandler_t *task, vEventMask_t *eventValue)
