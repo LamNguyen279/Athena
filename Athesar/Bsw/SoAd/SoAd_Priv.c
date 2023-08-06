@@ -34,6 +34,7 @@ static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size);
 
 static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId);
 static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId);
+static Std_ReturnType soad_SendSoCon(SoAd_SoConIdType SoConId, PduInfoType *PduInfo);
 
 static void soad_InitializeSoConQueue(SoAd_SocketBufferQueue_t *queue);
 static boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue);
@@ -194,6 +195,58 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
   }
 }
 
+static Std_ReturnType soad_SendSoCon(SoAd_SoConIdType SoConId, PduInfoType *PduInfo)
+{
+  Std_ReturnType ret = E_OK;
+
+  const SoAd_CfgSoConGrp_t *thisSoConGrCfg;
+  const SoAd_CfgSoCon_t *thisSoConCfg;
+
+  int iResult = -1;
+  struct sockaddr_in recvAddr;
+
+  thisSoConGrCfg = &SOAD_GET_SOCON_GROUP(SoConId);
+  thisSoConCfg = &SoAd_SoConArr[SoConId];
+
+  SOCKET sendSocket = SoAd_DynSoConArr[SoConId].W32Sock;
+
+  if(SOAD_IS_UDP_SOCON(SoConId))
+  {
+    recvAddr.sin_family = thisSoConGrCfg->W32AfType;
+    recvAddr.sin_port = htons(thisSoConCfg->RemotePort);
+    recvAddr.sin_addr.s_addr = inet_addr(thisSoConCfg->RemoteIpAddress);
+
+    iResult = sendto(
+        sendSocket, (char *)(PduInfo->SduDataPtr),
+        PduInfo->SduLength, 0,  (SOCKADDR *)&recvAddr, sizeof(recvAddr));
+
+    if (iResult == SOCKET_ERROR) {
+        printf("send failed with error: %d \n", WSAGetLastError());
+        fflush(_REENT->_stdout);
+        ret = E_NOT_OK;
+    }
+  }else
+  {
+    //TCP
+    if(SoAd_DynSoConArr[SoConId].SoAdSoConState == SOAD_SOCON_ONLINE)
+    {
+      iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
+
+      if (iResult == SOCKET_ERROR) {
+          printf("send failed with error: %d \n", WSAGetLastError());
+          fflush(_REENT->_stdout);
+          ret = E_NOT_OK;
+      }
+    }else
+    {
+      ret = E_NOT_OK;
+    }
+  }
+
+  return ret;
+}
+
+
 Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
 {
   int iResult = -1;
@@ -208,24 +261,12 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
 
   pduRoute = &SoAd_PduRouteArr[TxPduId];
 
-  SOAD_W32_CHECK_ENV(ret);
-
-  SOCKET sendSocket = SOAD_W32_INVALID_SOCKET;
-
   SoAd_SoConIdType soConIdx;
-
-  SoAd_SoCon_t *thisSoCon;
-
-  const SoAd_CfgSoConGrp_t *thisSoConGrCfg;
-
-  const SoAd_CfgSoCon_t *thisSoConCfg;
-
-  struct sockaddr_in recvAddr;
 
   if(ret == E_OK)
   {
-    SoAdPduRouteDestIdx = 0;
-    while((SoAdPduRouteDestIdx < pduRoute->SoAdPduRouteDestCtn) &&
+    SoAdPduRouteDestIdx = pduRoute->SoAdPduRouteDestBase;
+    while((SoAdPduRouteDestIdx < (pduRoute->SoAdPduRouteDestBase + pduRoute->SoAdPduRouteDestCtn)) &&
         ret == E_OK)
     {
       SoAdPduRouteDest = &SoAd_PduRouteDestArr[SoAdPduRouteDestIdx];
@@ -237,69 +278,24 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
         soConIdx = 0;
         while(soConIdx < SoAd_SoConArrSize)
         {
-          thisSoCon = &SoAd_DynSoConArr[soConIdx];
-          thisSoConGrCfg = &SOAD_GET_SOCON_GROUP(soConIdx);
-          thisSoConCfg = &SoAd_SoConArr[soConIdx];
-
           if(SoAd_DynSoConArr[soConIdx].SoAdSoConState == SOAD_SOCON_ONLINE)
           {
             //check that SOCON belongs to this group
             if(SoAd_SoConArr[soConIdx].SoConGrIdx == SoAdPduRouteDest->SoAdTxSoConGrIdx)
             {
-              sendSocket = SoAd_DynSoConArr[SoAdPduRouteDest->SoAdTxSoConIdx].W32Sock;
-
-              iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
-
-              if (iResult == SOCKET_ERROR) {
-                  closesocket(sendSocket);
-                  ret = E_NOT_OK;
-              }
+              ret = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
             }
           }
           soConIdx++;
         }
       }else if(SoAdPduRouteDest->SoAdTxSoConIdx != SOAD_INVALID_SOCON)
       {
-        thisSoCon = &SoAd_DynSoConArr[SoAdPduRouteDest->SoAdTxSoConIdx ];
-        thisSoConGrCfg = &SOAD_GET_SOCON_GROUP(SoAdPduRouteDest->SoAdTxSoConIdx );
-        thisSoConCfg = &SoAd_SoConArr[SoAdPduRouteDest->SoAdTxSoConIdx ];
-
-        sendSocket = thisSoCon->W32Sock;
-
-        if(SOAD_IS_UDP_SOCON(soConIdx))
-        {
-          recvAddr.sin_family = thisSoConGrCfg->W32AfType;
-          recvAddr.sin_port = htons(thisSoConCfg->RemotePort);
-          recvAddr.sin_addr.s_addr = inet_addr(thisSoConCfg->RemoteIpAddress);
-
-          iResult = sendto(
-              sendSocket, (char *)(PduInfo->SduDataPtr),
-              PduInfo->SduLength, 0,  (SOCKADDR *)&recvAddr, sizeof(recvAddr));
-
-          if (iResult == SOCKET_ERROR) {
-              printf("send failed with error: %d \n", WSAGetLastError());
-              fflush(_REENT->_stdout);
-              closesocket(sendSocket);
-              ret = E_NOT_OK;
-          }
-        }else
-        {
-          //TCP
-          iResult = send( sendSocket, (char *)(PduInfo->SduDataPtr), PduInfo->SduLength, 0 );
-
-          if (iResult == SOCKET_ERROR) {
-              printf("send failed with error: %d \n", WSAGetLastError());
-              fflush(_REENT->_stdout);
-              closesocket(sendSocket);
-              ret = E_NOT_OK;
-          }
-        }
+        ret = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
       }else
       {
         //No SOCON reference, NO SOCON GROUP reference -> invalid CONFIG
         ret = E_NOT_OK;
       }
-
       SoAdPduRouteDestIdx++;
     }
   }
@@ -487,8 +483,6 @@ static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId)
         iResult = bind(SOAD_GET_DYN_SOCON_GROUP(SoConId).W32SockListen,
             (SOCKADDR *) &sockaddr, sizeof (sockaddr));
         if (iResult == SOCKET_ERROR) {
-            closesocket(thisSoCon->W32Sock);
-            WSACleanup();
             ret = E_NOT_OK;
         }else
         {
@@ -500,8 +494,6 @@ static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId)
       //TCP client or UDP
       iResult = bind(thisSoCon->W32Sock, (SOCKADDR *) &sockaddr, sizeof (sockaddr));
       if (iResult == SOCKET_ERROR) {
-          closesocket(thisSoCon->W32Sock);
-          WSACleanup();
           ret = E_NOT_OK;
       }
     }

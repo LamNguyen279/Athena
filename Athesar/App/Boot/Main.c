@@ -64,10 +64,10 @@ void OsTask_1ms(void)
   Std_ReturnType ret = E_OK;
   PduInfoType pduInfo;
 
-  char txBuff[1500];
+  char txBuff[100] = "This is from AtheSar\n";
 
   pduInfo.SduDataPtr = &txBuff[0];
-  pduInfo.SduLength = sizeof(txBuff);
+  pduInfo.SduLength = sizeof("This is from AtheSar\n");
 
   while(1)
   {

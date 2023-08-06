@@ -45,7 +45,7 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
     {
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         2, /* SoAdTxPduRef */
-        SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
         SOAD_UPPER_DOIP, /* upper layer */
         1, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */
@@ -54,7 +54,7 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
     {
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         3, /* SoAdTxPduRef */
-        SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
         SOAD_UPPER_DOIP, /* upper layer */
         2, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */
@@ -227,7 +227,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
     {
         SOAD_FALSE,/* SoAdRxPduHeaderId */
         2,/* SoAdRxPduId */
-        SOAD_UPPER_IF,/* SoAdRxUpperLayerType */
+        SOAD_UPPER_TP,/* SoAdRxUpperLayerType */
         2, /* SoAdRxPduRef */
         0, /* SoAdRxRoutingGroupBase */
         1, /* SoAdRxRoutingGroupCtn */
