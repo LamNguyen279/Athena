@@ -297,6 +297,7 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
       }else
       {
         //No SOCON reference, NO SOCON GROUP reference -> invalid CONFIG
+        ret = E_NOT_OK;
       }
 
       SoAdPduRouteDestIdx++;
@@ -544,6 +545,8 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
           //upper is IF
           if(SOAD_GET_TCP_SOCON_SOCKET_ROUTE(thisSoConId).SoAdRxUpperLayerType == SOAD_UPPER_IF)
           {
+            pduInfo.SduLength = resultLength;
+            pduInfo.SduDataPtr = &rxBuffer[0];
             soad_IfRxIndicationAllUppers(thisSoConId, &pduInfo);
           }else
           {

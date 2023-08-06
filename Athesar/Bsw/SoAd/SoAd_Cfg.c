@@ -227,7 +227,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
     {
         SOAD_FALSE,/* SoAdRxPduHeaderId */
         2,/* SoAdRxPduId */
-        SOAD_UPPER_TP,/* SoAdRxUpperLayerType */
+        SOAD_UPPER_IF,/* SoAdRxUpperLayerType */
         2, /* SoAdRxPduRef */
         0, /* SoAdRxRoutingGroupBase */
         1, /* SoAdRxRoutingGroupCtn */
