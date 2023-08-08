@@ -169,8 +169,6 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId)
   if(SoConId >= SoAd_SoConArrSize)
   {
     ret = E_NOT_OK;
-  }else
-  {
     //TODO: raise DET
   }
 
@@ -180,9 +178,6 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId)
     {
       SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
     }
-  }else
-  {
-    //TODO: raise DET
   }
 
   return ret;
@@ -194,9 +189,7 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   if(SoConId >= SoAd_SoConArrSize)
   {
     ret = E_NOT_OK;
-  }else
-  {
-    //TODO: raise DET
+    //raise DET
   }
 
   if(ret == E_OK)
@@ -206,9 +199,6 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
       SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
       SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
     }
-  }else
-  {
-    //TODO: raise DET
   }
 
   return ret;
