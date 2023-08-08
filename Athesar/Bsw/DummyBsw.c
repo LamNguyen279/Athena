@@ -141,4 +141,23 @@ void DoIP_LocalIpAddrAssignmentChg(
   printf("DoIP_LocalIpAddrAssignmentChg() %d \n", DoIP_SoAdTpRxIndicationCtn);
   printf("SoConId = %d \n", SoConId);
   printf("State = %d \n", State);
+
+  fflush(stdout);
+}
+
+
+#define STD_RETURN_TYPE_AS_STRING(ret) ((ret == 0) ? ("E_OK") : ("E_NOT_OK"))
+
+uint32 DoIP_SoAdIfTxConfirmationCtn = 0;
+void DoIP_SoAdIfTxConfirmation(
+    PduIdType TxPduId,
+    Std_ReturnType result)
+{
+  DoIP_SoAdIfTxConfirmationCtn++;
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_SoAdIfTxConfirmation() %d \n", DoIP_SoAdIfTxConfirmationCtn);
+  printf("TxPduId = %d \n", TxPduId);
+  printf("result = %s \n", STD_RETURN_TYPE_AS_STRING(result));
+
+  fflush(stdout);
 }

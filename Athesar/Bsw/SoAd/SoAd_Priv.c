@@ -249,7 +249,8 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
 {
   int iResult = -1;
 
-  Std_ReturnType ret = E_OK;
+  Std_ReturnType retLogic = E_OK;
+  Std_ReturnType retTx = E_OK;
 
   const SoAd_CfgPduRouteDest_t *SoAdPduRouteDest;
 
@@ -261,11 +262,11 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
 
   SoAd_SoConIdType soConIdx;
 
-  if(ret == E_OK)
+  if(retLogic == E_OK)
   {
     SoAdPduRouteDestIdx = pduRoute->SoAdPduRouteDestBase;
     while((SoAdPduRouteDestIdx < (pduRoute->SoAdPduRouteDestBase + pduRoute->SoAdPduRouteDestCtn)) &&
-        ret == E_OK)
+        retLogic == E_OK)
     {
       SoAdPduRouteDest = &SoAd_PduRouteDestArr[SoAdPduRouteDestIdx];
 
@@ -281,24 +282,30 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
             //check that SOCON belongs to this group
             if(SoAd_SoConArr[soConIdx].SoConGrIdx == SoAdPduRouteDest->SoAdTxSoConGrIdx)
             {
-              ret = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
+              retTx = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
             }
           }
           soConIdx++;
         }
       }else if(SoAdPduRouteDest->SoAdTxSoConIdx != SOAD_INVALID_SOCON)
       {
-        ret = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
+        retTx = soad_SendSoCon(SoAdPduRouteDest->SoAdTxSoConIdx, PduInfo);
       }else
       {
         //No SOCON reference, NO SOCON GROUP reference -> invalid CONFIG
-        ret = E_NOT_OK;
+        retLogic = E_NOT_OK;
       }
+
+      if(retLogic == E_OK)
+      {
+        SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperIfTxConfirmation(TxPduId, retTx);
+      }
+
       SoAdPduRouteDestIdx++;
     }
   }
 
-  return ret;
+  return retLogic;
 }
 
 //static function
@@ -786,16 +793,16 @@ static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *
 
 static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
 {
-  uint32 pduroutedestCtn = 0;
-  uint32 pduroutedest = 0;
+  uint32 pdurouteCtn = 0;
+  uint32 pduroute = 0;
 
-  while(pduroutedestCtn < SoAd_SoConArr[SoConId].PduRouteDestListSize)
+  while(pdurouteCtn < SoAd_SoConArr[SoConId].PduRouteSize)
   {
-    pduroutedest = SoAd_SoConArr[SoConId].PduRouteDestList[pduroutedestCtn];
+    pduroute = SoAd_SoConArr[SoConId].PduRouteList[pdurouteCtn];
 
-    SOAD_GET_UPPER_FNCTBL_BY_PDUROUTEDEST(pduroutedest).UpperSoConModeChg(SoConId, Mode);
+    SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(pduroute).UpperSoConModeChg(SoConId, Mode);
 
-    pduroutedestCtn++;
+    pdurouteCtn++;
   }
 
   SoAd_DynSoConArr[SoConId].SoAdSoConState = Mode;

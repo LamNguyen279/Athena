@@ -19,7 +19,7 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
     {
         &DoIP_SoAdIfRxIndication, //UpperIfRxIndication
         NULL_PTR, //UpperIfTriggerTransmit
-        NULL_PTR, //UpperIfTxConfirmation
+        &DoIP_SoAdIfTxConfirmation, //UpperIfTxConfirmation
         &DoIP_SoAdTpStartOfReception, //UpperTpStartOfReception
         &DoIP_SoAdTpCopyRxData, //UpperTpCopyRxData
         &DoIP_SoAdTpRxIndication, //UpperTpRxIndication
@@ -54,7 +54,7 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
     {
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         3, /* SoAdTxPduRef */
-        SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
         SOAD_UPPER_DOIP, /* upper layer */
         2, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */
@@ -168,13 +168,13 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 const uint32 SoAd_SoConGrpArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConGrArr);
 
 
-static const uint32 SoAdSoCon0_PduRouteDestList[]={0};
+static const uint32 SoAdSoCon0_PduRouteList[]={0};
 static const uint32 SoAdSoCon0_SocketRouteDestList[]={0};
 
-static const uint32 SoAdSoCon1_PduRouteDestList[]={1};
+static const uint32 SoAdSoCon1_PduRouteList[]={1};
 static const uint32 SoAdSoCon1_SocketRouteDestList[]={1};
 
-static const uint32 SoAdSoCon2_PduRouteDestList[]={2};
+static const uint32 SoAdSoCon2_PduRouteList[]={2};
 static const uint32 SoAdSoCon2_SocketRouteDestList[]={2};
 
 const SoAd_CfgSoCon_t SoAd_SoConArr[] =
@@ -184,8 +184,8 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
         "127.0.0.2", /* SoAdSocketRemoteIpAddress */
         20000,/* SoAdSocketRemotePort */
         0, /* SoConGrIdx */
-        &SoAdSoCon0_PduRouteDestList[0], /* PduRouteDestList */
-        SOAD_GET_ARRAY_SIZE(SoAdSoCon0_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon0_PduRouteList[0], /* PduRouteList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon0_PduRouteList), /* PduRouteListSize */
         &SoAdSoCon0_SocketRouteDestList[0], /* SocketRouteDestList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon0_SocketRouteDestList), /* SocketRouteDestListSize */
     },
@@ -194,8 +194,8 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
         "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
         20001,/* SoAdSocketRemotePort */
         1, /* SoConGrIdx */
-        &SoAdSoCon1_PduRouteDestList[0], /* PduRouteDestList */
-        SOAD_GET_ARRAY_SIZE(SoAdSoCon1_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon1_PduRouteList[0], /* PduRouteList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon1_PduRouteList), /* PduRouteListSize */
         &SoAdSoCon1_SocketRouteDestList[0], /* SocketRouteDestList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon1_SocketRouteDestList), /* SocketRouteDestListSize */
     },
@@ -204,8 +204,8 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
         "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
         20002,/* SoAdSocketRemotePort */
         2, /* SoConGrIdx */
-        &SoAdSoCon2_PduRouteDestList[0], /* PduRouteDestList */
-        SOAD_GET_ARRAY_SIZE(SoAdSoCon2_PduRouteDestList), /* PduRouteDestListSize */
+        &SoAdSoCon2_PduRouteList[0], /* PduRouteList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon2_PduRouteList), /* PduRouteListSize */
         &SoAdSoCon2_SocketRouteDestList[0], /* SocketRouteDestList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon2_SocketRouteDestList), /* SocketRouteDestListSize */
     }

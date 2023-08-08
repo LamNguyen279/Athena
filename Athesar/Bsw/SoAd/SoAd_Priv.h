@@ -113,7 +113,7 @@
 
 #define SOAD_GET_TCP_SOCON_SOCKET_ROUTE(SoConId)                      SoAd_SocketRouteArr[SoAd_SoConArr[(SoConId)].SocketRouteDestList[0]]
 
-#define SOAD_GET_UPPER_FNCTBL_BY_PDUROUTEDEST(PduRouteDestId)         SoAd_UpperFunctionTable[SoAd_PduRouteArr[(PduRouteDestId)].SoAdUpper]
+#define SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(PduRoute)                   SoAd_UpperFunctionTable[SoAd_PduRouteArr[(PduRoute)].SoAdUpper]
 
 #define SOAD_GET_UPPER_FNCTBL_BY_SOCKETROUTEDEST(SocketRouteDestId)   SoAd_UpperFunctionTable[SoAd_SocketRouteArr[(SocketRouteDestId)].SoAdUpper]
 /* ***************************** [ TYPES     ] ****************************** */
@@ -251,8 +251,8 @@ typedef struct _SoAd_CfgSoCon_t
   sint8 RemoteIpAddress[SOAD_IPV4_ADD_SIZE]; /* remote address */
   uint32 RemotePort; /* remote port */
   uint32 SoConGrIdx; /* get local SoCon Group properties by this Id */
-  const uint32 *PduRouteDestList; /* holds all PduRouteDest that refer to this SoCon */
-  const uint32 PduRouteDestListSize; /* PduRouteDestReferredListCtn */
+  const uint32 *PduRouteList; /* holds all PduRoute that refer to this SoCon */
+  const uint32 PduRouteSize; /* PduRouteReferredListCtn */
   const uint32 *SocketRouteDestList;  /* holds all Socket RouteDest that refer to this SoCon */
   const uint32 SocketRouteDestListSize; /* SocketRouteDestReferredListCtn */
 } SoAd_CfgSoCon_t;

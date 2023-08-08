@@ -39,6 +39,10 @@ extern void DoIP_SoAdTpRxIndication(
 extern void DoIP_LocalIpAddrAssignmentChg(
     SoAd_SoConIdType SoConId,
     TcpIp_IpAddrStateType State);
+
+extern void DoIP_SoAdIfTxConfirmation(
+    PduIdType TxPduId,
+    Std_ReturnType result);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */
