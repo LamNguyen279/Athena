@@ -7,7 +7,8 @@ Athesar/Bsw/SoAd/SoAd.o: ../Athesar/Bsw/SoAd/SoAd.c \
  D:\Athena\Athena\Athesar\Bsw\include/SoAd.h \
  D:\Athena\Athena\Athesar\Bsw\include/ComStack_Types.h \
  D:\Athena\Athena\Athesar\Bsw\include/TcpIp.h \
- ../Athesar/Bsw/SoAd/SoAd_Cfg.h
+ D:\Athena\Athena\Athesar\Cfg/SoAd_Cfg.h \
+ D:\Athena\Athena\Athesar\Bsw\SoAd/SoAd_Priv.h
 
 ../Athesar/Bsw/SoAd/SoAd_Ram.h:
 
@@ -27,4 +28,6 @@ D:\Athena\Athena\Athesar\Bsw\include/ComStack_Types.h:
 
 D:\Athena\Athena\Athesar\Bsw\include/TcpIp.h:
 
-../Athesar/Bsw/SoAd/SoAd_Cfg.h:
+D:\Athena\Athena\Athesar\Cfg/SoAd_Cfg.h:
+
+D:\Athena\Athena\Athesar\Bsw\SoAd/SoAd_Priv.h:

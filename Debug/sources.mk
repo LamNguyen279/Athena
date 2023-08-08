@@ -26,6 +26,7 @@ SUBDIRS := \
 Athesar/App/Boot \
 Athesar/Bsw \
 Athesar/Bsw/SoAd \
+Athesar/Cfg \
 Athesar/Glue/vOs \
 Athesar/Rte \
 

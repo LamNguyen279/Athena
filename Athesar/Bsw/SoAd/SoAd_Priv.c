@@ -296,13 +296,13 @@ Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo)
         retLogic = E_NOT_OK;
       }
 
-      if(retLogic == E_OK)
-      {
-        SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperIfTxConfirmation(TxPduId, retTx);
-      }
-
       SoAdPduRouteDestIdx++;
     }
+  }
+
+  if(retLogic == E_OK)
+  {
+    SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperIfTxConfirmation(TxPduId, retTx);
   }
 
   return retLogic;
