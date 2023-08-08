@@ -12,9 +12,11 @@
 #include "Std_Types.h"
 #include "SoAd_Priv.h"
 /* ***************************** [ MACROS    ] ****************************** */
-#define SOAD_CFG_NUM_SOCON_GROUP                      20
+#define SOAD_CFG_NUM_SOCON_GROUP                      3
 
-#define SOAD_CFG_NUM_ROUTING_GROUP                    10
+#define SOAD_CFG_NUM_ROUTING_GROUP                    3
+
+#define SOAD_CFG_NUM_TXPDU                            3
 
 #define SOAD_CFG_NUM_SOCON                            3 //SoAd_SoConArrSize
 
@@ -54,6 +56,8 @@ extern const uint32 SoAd_SoConArrSize;
 
 extern const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[];
 extern const uint32 SoAd_CfgSocketRouteArrSize;
+
+extern const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[];
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

@@ -23,8 +23,8 @@ const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[] =
         &DoIP_SoAdTpStartOfReception, //UpperTpStartOfReception
         &DoIP_SoAdTpCopyRxData, //UpperTpCopyRxData
         &DoIP_SoAdTpRxIndication, //UpperTpRxIndication
-        NULL_PTR, //UpperTpCopyTxData
-        NULL_PTR, //UpperTpTpTxConfirmation
+        &DoIP_SoAdTpCopyTxData, //UpperTpCopyTxData
+        &DoIP_SoAdTpTxConfirmation, //UpperTpTpTxConfirmation
         &DoIP_SoConModeChg, //UpperSoConModeChgDoIP_LocalIpAddrAssignmentChg
         &DoIP_LocalIpAddrAssignmentChg, //LocalIpAddrAssignmentChg
     }

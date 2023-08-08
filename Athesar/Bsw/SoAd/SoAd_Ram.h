@@ -14,12 +14,10 @@
 /* ***************************** [ MACROS    ] ****************************** */
 /* ***************************** [ TYPES     ] ****************************** */
 /* ***************************** [ DECLARES  ] ****************************** */
-uint32_t SoAd_DynSoConArrCtn;
+extern SoAd_SoCon_t SoAd_DynSoConArr[];
+extern SoAd_SoConGr_t SoAd_DynSoConGrArr[];
 
-SoAd_SoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
-SoAdSoConGr_t SoAd_DynSoConGrArr[SOAD_CFG_NUM_SOCON_GROUP];
-
-SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[];
+extern SoAd_TxPdu_t SoAd_DynTxPdu[];
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

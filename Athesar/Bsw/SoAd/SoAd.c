@@ -45,7 +45,12 @@ void SoAd_MainFunction(void)
   {
     _SoAd_HandleSoConState(SoConId);
 
-    _SoAd_HandleSoConRxData(SoConId);
+    _SoAd_HandleRxData(SoConId);
+  }
+
+  for(PduIdType txPduId = 0; txPduId < SoAd_PduRouteArrSize; txPduId ++)
+  {
+    _SoAd_HandleTxData(txPduId);
   }
 }
 
@@ -86,8 +91,29 @@ Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
   return ret;
 }
 
-Std_ReturnType SoAd_TpTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr) {
-  Std_ReturnType ret = E_NOT_OK;
+Std_ReturnType SoAd_TpTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
+{
+  Std_ReturnType ret = E_OK;
+
+  SOAD_UNUSED(PduInfoPtr);
+
+  if(TxPduId >= SoAd_PduRouteArrSize)
+  {
+    //TODO: raise DET
+    ret = E_NOT_OK;
+  }else
+  {
+    if(SoAd_PduRouteArr[TxPduId].SoAdTxUpperLayerType != SOAD_UPPER_TP)
+    {
+      ret = E_NOT_OK;
+      //TODO raise DET
+    }
+  }
+
+  if(ret == E_OK)
+  {
+    ret = _SoAd_RequestTpTxSs(TxPduId, PduInfoPtr);
+  }
 
   return ret;
 }
@@ -102,13 +128,13 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
 
   if(TxPduId >= SoAd_PduRouteArrSize)
   {
-//    TODO: SOAD_RAISE_DEV_ERROR();
+//    TODO: raise DET
     ret = E_NOT_OK;
   }
 
   if(SoConIdPtr == NULL_PTR)
   {
-    //TODO: raise dev
+    //TODO: raise DET
     ret = E_NOT_OK;
   }
 
@@ -131,10 +157,12 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
         }
       }else
       {
+        /* SWS_SoAd_00724 */
         //call SoAd_GetSoConId in case fan out PDU
       }
     }else
     {
+      /* SWS_SoAd_00724 */
       //call SoAd_GetSoConId in case fan out PDU
     }
   }

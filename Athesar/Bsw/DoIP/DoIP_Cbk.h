@@ -43,6 +43,16 @@ extern void DoIP_LocalIpAddrAssignmentChg(
 extern void DoIP_SoAdIfTxConfirmation(
     PduIdType TxPduId,
     Std_ReturnType result);
+
+extern BufReq_ReturnType DoIP_SoAdTpCopyTxData(
+    const PduIdType id,
+    const PduInfoType *info,
+    const RetryInfoType *retry,
+    PduLengthType *availableDataPtr);
+
+extern void DoIP_SoAdTpTxConfirmation(
+    PduIdType TxPduId,
+    Std_ReturnType result);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

@@ -86,6 +86,8 @@
   (SoAd_DynSoConArr[(SoConId)].RxQueue.size != 0) || \
   (SoAd_DynSoConArr[(SoConId)].TxQueue.size != 0)
 
+#define SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId)      (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
+
 //socket group utilities
 #define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
 
@@ -298,9 +300,9 @@ typedef struct _SoAd_SoCon_t
   /* dynamic remote address */
   char  RemoteAddress[SOAD_IPV4_ADD_SIZE];
   uint32 RemotePort;
-  //AUTOSAR
+  /* for AUTOSAR */
   uint32 RequestMask;
-  SoAd_SoConIdType W32SoAdSoConId;
+  SoAd_SoConIdType SoAdSoConId;
   SoAd_SoConModeType SoAdSoConState;
 } SoAd_SoCon_t;
 
@@ -314,14 +316,24 @@ typedef struct _SoAdSoConGr_t
   } W32Thread;
   SoAd_W32SocketState_t W32SockListenState;
   SOCKET W32SockListen;
-} SoAdSoConGr_t;
+} SoAd_SoConGr_t;
+
+typedef struct _SoAd_TxPdu_t
+{
+  uint8 PduData[SOAD_SOCON_BUFF_SIZE];
+  uint32_t TxSsCopiedLength;
+  uint32_t TxSsLastUpperAskedSize;
+  SoAd_TpSessionState_t TxSsState;
+} SoAd_TxPdu_t;
 
 /* ***************************** [ DECLARES  ] ****************************** */
 extern void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId);
-extern void _SoAd_HandleSoConRxData(SoAd_SoConIdType SoConId);
+extern void _SoAd_HandleRxData(SoAd_SoConIdType SoConId);
+extern void _SoAd_HandleTxData(PduIdType TxPduId);
 extern void _SoAd_InitSocon(SoAd_SoConIdType SoConId);
 extern void _SoAd_InitSoConGroup(uint32 SoConGr);
 extern Std_ReturnType _SoAd_IfPduFanOut(PduIdType TxPduId, const PduInfoType *PduInfo);
+extern Std_ReturnType _SoAd_RequestTpTxSs(PduIdType TxPduId, const PduInfoType *PduInfo);
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

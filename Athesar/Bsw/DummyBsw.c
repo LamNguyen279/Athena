@@ -71,9 +71,9 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
   if(info->SduLength == 0)
   {
     *bufferSizePtr = (rand() % DOIP_RANDOM_BUFF_SIZE);
-
-    return BUFREQ_OK;
   }
+
+  return BUFREQ_OK;
 }
 
 uint8 DoIP_SoAdTpCopyRxDataBuff[10][256];
@@ -161,3 +161,74 @@ void DoIP_SoAdIfTxConfirmation(
 
   fflush(stdout);
 }
+
+uint32 DoIP_SoAdTpTxConfirmationCtn = 0;
+void DoIP_SoAdTpTxConfirmation(
+    PduIdType TxPduId,
+    Std_ReturnType result)
+{
+  DoIP_SoAdTpTxConfirmationCtn++;
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_SoAdTpTxConfirmation() %d \n", DoIP_SoAdTpTxConfirmationCtn);
+  printf("TxPduId = %d \n", TxPduId);
+  printf("result = %s \n", STD_RETURN_TYPE_AS_STRING(result));
+
+  fflush(stdout);
+}
+
+
+#define DOIP_SOADTPCOPY_STRING  "Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Hello World, This is from AtheSar !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+#define DOIP_SOADTPCOPY_STRING_SIZE sizeof(DOIP_SOADTPCOPY_STRING)
+
+uint8 DoIP_SoAdTpCopyTxDataBuff[DOIP_SOADTPCOPY_STRING_SIZE];
+
+uint32 DoIP_SoAdTpCopyTxDataBuffCopiedLength[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint32 DoIP_SoAdTpCopyTxDataCtn = 0;
+BufReq_ReturnType DoIP_SoAdTpCopyTxData(
+    const PduIdType id,
+    const PduInfoType *info,
+    const RetryInfoType *retry,
+    PduLengthType *availableDataPtr)
+{
+  DoIP_SoAdTpCopyTxDataCtn++;
+
+  printf("----------------------------------------------------------------\n");
+  printf("DoIP_SoAdTpCopyTxData() %d \n", DoIP_SoAdTpCopyTxDataCtn);
+  printf("id = %d \n", id);
+  printf("info->SduLength = %d \n", info->SduLength);
+
+  if(info->SduLength == 0)
+  {
+    //ask size from SoAd
+    *availableDataPtr = (rand() % DOIP_RANDOM_BUFF_SIZE) + 1;
+    memcpy(&DoIP_SoAdTpCopyTxDataBuff[0], DOIP_SOADTPCOPY_STRING, DOIP_SOADTPCOPY_STRING_SIZE);
+  }else
+  {
+    //copying state
+    //copying on going
+    memcpy(info->SduDataPtr,
+        &DoIP_SoAdTpCopyTxDataBuff[DoIP_SoAdTpCopyTxDataBuffCopiedLength[id]],
+        info->SduLength);
+
+    DoIP_SoAdTpCopyTxDataBuffCopiedLength[id] += info->SduLength;
+
+    //create random buffer size for testing SOAD
+    *availableDataPtr = (rand() % DOIP_RANDOM_BUFF_SIZE) + 1;
+
+    if((*availableDataPtr + DoIP_SoAdTpCopyTxDataBuffCopiedLength[id]) >= DOIP_SOADTPCOPY_STRING_SIZE)
+    {
+      *availableDataPtr = DOIP_SOADTPCOPY_STRING_SIZE - DoIP_SoAdTpCopyTxDataBuffCopiedLength[id];
+    }
+
+    if(DoIP_SoAdTpCopyTxDataBuffCopiedLength[id] == DOIP_SOADTPCOPY_STRING_SIZE)
+    {
+      //Copying done
+      *availableDataPtr = 0;
+      DoIP_SoAdTpCopyTxDataBuffCopiedLength[id] = 0;
+    }
+  }
+
+  return BUFREQ_OK;
+}
+

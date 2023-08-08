@@ -19,8 +19,6 @@ void vEventSet(vTaskHandler_t *task, vEventMask_t eventMask)
 {
   WaitForSingleObject( _vEventMutex, INFINITE );
   //check task are in waiting event state
-  vSchedulerWaitForSchedulePoint();
-
   if((task->State == VTASK_STATE_WAIT) && (task->SubState == VTASK_SUBSTATE_WAIT_EVENT))
   {
     //check task are waiting for this event

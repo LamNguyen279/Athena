@@ -74,19 +74,23 @@ void OsTask_1ms(void)
     switch(TestCaseIdx)
     {
     case 1:
-      SoAd_OpenSoCon(TestSoConIdx);
+      ret = SoAd_OpenSoCon(TestSoConIdx);
       TestCaseIdx = -1;
       break;
     case 2:
-      SoAd_CloseSoCon(TestSoConIdx, 0);
+      ret = SoAd_CloseSoCon(TestSoConIdx, 0);
       TestCaseIdx = -1;
       break;
     case 3:
-      SoAd_GetSoConId(TestTxPduId, &testGetSoConId);
+      ret = SoAd_GetSoConId(TestTxPduId, &testGetSoConId);
       TestCaseIdx = -1;
       break;
     case 4:
       ret = SoAd_IfTransmit(TestTxPduId, &pduInfo);
+      TestCaseIdx = -1;
+      break;
+    case 5:
+      ret = SoAd_TpTransmit(TestTxPduId, &pduInfo);
       TestCaseIdx = -1;
       break;
     default:
