@@ -23,6 +23,7 @@ static void soad_SocketListenRoutine(SoAd_SoConGr_t *SoConGr);
 
 static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode);
 static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *Info);
+static void soad_SoConIpAssignChgNotifAllUppers(SoAd_SoConIdType SoConId, TcpIp_IpAddrStateType State);
 
 static Std_ReturnType soad_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId);
@@ -39,8 +40,6 @@ static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId);
 static Std_ReturnType soad_SendSoCon(SoAd_SoConIdType SoConId, const PduInfoType *PduInfo);
 
 static void soad_InitSoConQueue(SoAd_SocketBufferQueue_t *queue);
-static boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue);
-static boolean soad_isQueueEmpty(SoAd_SocketBufferQueue_t *queue);
 static boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *buffer);
 static boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *dest);
 static boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue);
@@ -143,6 +142,7 @@ void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
   soCon->RxSsCopiedLength = 0;
 
   soCon->SoAdSoConState = SOAD_SOCON_OFFLINE;
+  soCon->IpAddrState = TCPIP_IPADDR_STATE_UNASSIGNED;
 
   soCon->W32Sock = SOAD_W32_INVALID_SOCKET;
 
@@ -186,7 +186,10 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
   if(SoCon1stEnterCtn < SoAd_SoConArrSize)
   {
     SoCon1stEnterCtn++;
+
     soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_OFFLINE);
+    //stub <Up>_LocalIpAddrAssignmentChg
+    soad_SoConIpAssignChgNotifAllUppers(SoConId, TCPIP_IPADDR_STATE_ASSIGNED);
   }
 
   if(SOAD_CHECK_SOCON_NEED_OPEN(SoConId))
@@ -857,12 +860,33 @@ static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeT
   {
     pduroute = SoAd_SoConArr[SoConId].PduRouteList[pdurouteCtn];
 
-    SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(pduroute).UpperSoConModeChg(SoConId, Mode);
-
+    if(SOAD_GET_SOCON_GROUP(SoConId).SoAdSocketSoConModeChgNotification == SOAD_TRUE)
+    {
+      SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(pduroute).UpperSoConModeChg(SoConId, Mode);
+    }
     pdurouteCtn++;
   }
 
   SoAd_DynSoConArr[SoConId].SoAdSoConState = Mode;
+}
+
+static void soad_SoConIpAssignChgNotifAllUppers(SoAd_SoConIdType SoConId, TcpIp_IpAddrStateType State)
+{
+  uint32 pdurouteCtn = 0;
+  uint32 pduroute = 0;
+
+  while(pdurouteCtn < SoAd_SoConArr[SoConId].PduRouteSize)
+  {
+    pduroute = SoAd_SoConArr[SoConId].PduRouteList[pdurouteCtn];
+
+    if(SOAD_GET_SOCON_GROUP(SoConId).SoAdSocketIpAddrAssignmentChgNotification == SOAD_TRUE)
+    {
+      SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(pduroute).LocalIpAddrAssignmentChg(SoConId, State);
+    }
+    pdurouteCtn++;
+  }
+
+  SoAd_DynSoConArr[SoConId].SoAdSoConState = State;
 }
 
 static void soad_HandleTpTxSession(PduIdType TxPduId)

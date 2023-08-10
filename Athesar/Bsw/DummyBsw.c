@@ -9,6 +9,8 @@
 
 #define DOIP_RANDOM_BUFF_SIZE 50
 
+#define STD_RETURN_TYPE_AS_STRING(ret) ((ret == 0) ? ("E_OK") : ("E_NOT_OK"))
+
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
@@ -122,7 +124,7 @@ void DoIP_SoAdTpRxIndication(
   printf("----------------------------------------------------------------\n");
   printf("DoIP_SoAdTpRxIndication() %d \n", DoIP_SoAdTpRxIndicationCtn);
   printf("id = %d \n", id);
-  printf("result = %d \n", result);
+  printf("result = %s \n", STD_RETURN_TYPE_AS_STRING(result));
 
   printf("Copied Size: %d\n", DoIP_SoAdTpCopyRxDataCopyIdx);
   printf("Copied Buffer:\n%s\n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
@@ -133,6 +135,8 @@ void DoIP_SoAdTpRxIndication(
   fflush(stdout);
 }
 
+#define IP_STATE_TO_STR(state) (state == 0) ? "TCPIP_IPADDR_STATE_ASSIGNED" : \
+    (state == 1) ? "TCPIP_IPADDR_STATE_ONHOLD" : "TCPIP_IPADDR_STATE_UNASSIGNED"
 void DoIP_LocalIpAddrAssignmentChg(
     SoAd_SoConIdType SoConId,
     TcpIp_IpAddrStateType State)
@@ -140,13 +144,11 @@ void DoIP_LocalIpAddrAssignmentChg(
   printf("----------------------------------------------------------------\n");
   printf("DoIP_LocalIpAddrAssignmentChg() %d \n", DoIP_SoAdTpRxIndicationCtn);
   printf("SoConId = %d \n", SoConId);
-  printf("State = %d \n", State);
+  printf("State = %s \n", IP_STATE_TO_STR(State));
 
   fflush(stdout);
 }
 
-
-#define STD_RETURN_TYPE_AS_STRING(ret) ((ret == 0) ? ("E_OK") : ("E_NOT_OK"))
 
 uint32 DoIP_SoAdIfTxConfirmationCtn = 0;
 void DoIP_SoAdIfTxConfirmation(
@@ -207,8 +209,8 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
   }else
   {
     //copying state
-    //copying on going
     memcpy(info->SduDataPtr,
+    //copying on going
         &DoIP_SoAdTpCopyTxDataBuff[DoIP_SoAdTpCopyTxDataBuffCopiedLength[id]],
         info->SduLength);
 

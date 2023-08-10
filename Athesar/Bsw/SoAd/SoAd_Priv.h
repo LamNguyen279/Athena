@@ -302,6 +302,7 @@ typedef struct _SoAd_SoCon_t
   uint32 RequestMask;
   SoAd_SoConIdType SoAdSoConId;
   SoAd_SoConModeType SoAdSoConState;
+  TcpIp_IpAddrStateType IpAddrState;
 } SoAd_SoCon_t;
 
 typedef struct _SoAdSoConGr_t
