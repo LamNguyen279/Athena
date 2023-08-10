@@ -197,6 +197,7 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
   printf("DoIP_SoAdTpCopyTxData() %d \n", DoIP_SoAdTpCopyTxDataCtn);
   printf("id = %d \n", id);
   printf("info->SduLength = %d \n", info->SduLength);
+  fflush(stdout);
 
   if(info->SduLength == 0)
   {

@@ -52,7 +52,7 @@ static boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue
 void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
 {
   uint8 dummy;
-  switch(SOAD_DYN_SOCON(SoConId).W32SockState)
+  switch(SoAd_DynSoConArr[SoConId].W32SockState)
   {
     case SOAD_W32SOCK_STATE_INVALID:
       soad_HandleSoConStateInvalid(SoConId);
@@ -64,16 +64,16 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
       soad_HandleSoConStateBind(SoConId);
       break;
     case SOAD_W32SOCK_STATE_CONNECTING:
-      dummy = SOAD_DYN_SOCON(SoConId).W32SockState;
+      dummy = SoAd_DynSoConArr[SoConId].W32SockState;
       break;
     case SOAD_W32SOCK_STATE_CONNECTED:
-      dummy = SOAD_DYN_SOCON(SoConId).W32SockState;
+      dummy = SoAd_DynSoConArr[SoConId].W32SockState;
       break;
     case SOAD_W32SOCK_STATE_LISTENING:
-      dummy = SOAD_DYN_SOCON(SoConId).W32SockState;
+      dummy = SoAd_DynSoConArr[SoConId].W32SockState;
       break;
     case SOAD_W32SOCK_STATE_ACCEPTED:
-      dummy = SOAD_DYN_SOCON(SoConId).W32SockState;
+      dummy = SoAd_DynSoConArr[SoConId].W32SockState;
       break;
     default:
       break;
@@ -181,6 +181,13 @@ void _SoAd_HandleTxData(PduIdType TxPduId)
 static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_NOT_OK;
+  static SoAd_SoConIdType SoCon1stEnterCtn = 0;
+
+  if(SoCon1stEnterCtn < SoAd_SoConArrSize)
+  {
+    SoCon1stEnterCtn++;
+    soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_OFFLINE);
+  }
 
   if(SOAD_CHECK_SOCON_NEED_OPEN(SoConId))
   {
@@ -188,12 +195,12 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
 
     if(ret == E_OK)
     {
-      SOAD_DYN_SOCON(SoConId).W32SockState = SOAD_W32SOCK_STATE_NEW;
+      SoAd_DynSoConArr[SoConId].W32SockState = SOAD_W32SOCK_STATE_NEW;
       SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
 
     }else
     {
-      SOAD_DYN_SOCON(SoConId).W32SockState = SOAD_W32SOCK_STATE_INVALID;
+      SoAd_DynSoConArr[SoConId].W32SockState = SOAD_W32SOCK_STATE_INVALID;
     }
   }
 }
@@ -320,7 +327,11 @@ Std_ReturnType _SoAd_RequestTpTxSs(PduIdType TxPduId, const PduInfoType *PduInfo
   {
     if(soad_IsFanOutPDU(TxPduId) == SOAD_FALSE)
     {
-      SoAd_DynTxPdu[TxPduId].TxSsState = SOAD_SS_START;
+      if(SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId).SoAdSoConState == SOAD_SOCON_ONLINE)
+      {
+        SoAd_DynTxPdu[TxPduId].TxSsState = SOAD_SS_START;
+        ret = E_OK;
+      }
     }
   }
 
@@ -494,7 +505,7 @@ static Std_ReturnType soad_CreateSocket(SoAd_SoConIdType SoConId)
       }else
       {
         //TCP client or UDP
-        SOAD_DYN_SOCON(SoConId).W32Sock = newSock;
+        SoAd_DynSoConArr[SoConId].W32Sock = newSock;
       }
     }
   }else
@@ -938,7 +949,7 @@ static void soad_HandleTpTxSession(PduIdType TxPduId)
       pduInfo.SduDataPtr = &(thisTxPdu->PduData[0]);
       pduInfo.SduLength = thisTxPdu->TxSsCopiedLength;
 
-      ret = soad_SendSoCon(SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId), &pduInfo);
+      ret = soad_SendSoCon(SOAD_GET_TCP_SOCONID_BY_TXPDU(TxPduId), &pduInfo);
 
       SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpTpTxConfirmation(TxPduId, ret);
 
@@ -1089,22 +1100,17 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
   }
 }
 
-void soad_InitSoConQueue(SoAd_SocketBufferQueue_t *queue) {
+void soad_InitSoConQueue(SoAd_SocketBufferQueue_t *queue)
+{
     queue->front = 0;
     queue->rear = -1;
     queue->size = 0;
 }
 
-boolean soad_isSoConQueueFull(SoAd_SocketBufferQueue_t *queue) {
-    return queue->size == SOAD_SOCON_QUEUE_DEPTH;
-}
-
-boolean soad_isQueueEmpty(SoAd_SocketBufferQueue_t *queue) {
-    return queue->size == 0;
-}
-
-boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *buffer) {
-    if (soad_isSoConQueueFull(queue)) {
+boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *buffer)
+{
+    if((queue->size) == SOAD_SOCON_QUEUE_DEPTH)
+    {
         return FALSE; // Queue is full, unable to enqueue
     }
 
@@ -1114,8 +1120,10 @@ boolean soad_EnqueueSoConData(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_
     return TRUE;
 }
 
-boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *dest) {
-    if (soad_isQueueEmpty(queue)) {
+boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoConBuffer_t *dest)
+{
+    if((queue->size) == 0)
+    {
         return FALSE; // Queue is empty, unable to get first element
     }
 
@@ -1123,8 +1131,9 @@ boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, SoAd_SoC
     return TRUE;
 }
 
-boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue) {
-    if (soad_isQueueEmpty(queue)) {
+boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue)
+{
+    if ((queue->size) == 0) {
         return FALSE; // Queue is empty, unable to remove first element
     }
 

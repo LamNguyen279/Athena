@@ -68,8 +68,6 @@
 #define SOAD_SOCCON_REQMASK_OPEN   1
 #define SOAD_SOCCON_REQMASK_CLOSE  2
 
-#define SOAD_DYN_SOCON(SoConId)          (SoAd_DynSoConArr[(SoConId)])
-
 #define SOAD_CHECK_SOCON_REQMASK(SoConId, mask) \
   (((SoAd_DynSoConArr[(SoConId)].RequestMask) & (mask)) == (mask))
 #define SOAD_SET_SOCON_REQMASK(SoConId, mask) \
@@ -86,8 +84,8 @@
   (SoAd_DynSoConArr[(SoConId)].RxQueue.size != 0) || \
   (SoAd_DynSoConArr[(SoConId)].TxQueue.size != 0)
 
-#define SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId)      (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
-
+#define SOAD_GET_TCP_SOCONID_BY_TXPDU(TxPduId)      (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
+#define SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId)        SoAd_DynSoConArr[(SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)]
 //socket group utilities
 #define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
 

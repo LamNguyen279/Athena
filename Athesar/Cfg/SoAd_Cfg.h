@@ -14,7 +14,7 @@
 /* ***************************** [ MACROS    ] ****************************** */
 #define SOAD_CFG_SOCON_TRX_BUFF_SIZE                  1500
 
-#define SOAD_CFGDET_USED                              STD_OFF
+#define SOAD_CFG_DET_USED                             STD_OFF
 
 #define SOAD_CFG_GETANDRESET_MEASUREMENTDATA_API      STD_OFF
 
@@ -47,7 +47,7 @@ extern const SoAd_CfgSoCon_t SoAd_SoConArr[];
 extern const uint32 SoAd_SoConArrSize;
 
 extern const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[];
-extern const uint32 SoAd_CfgSocketRouteArrSize;
+extern const uint32 SoAd_SocketRouteArrSize;
 
 extern const SoAd_CfgUpperFncTable_t SoAd_UpperFunctionTable[];
 /* ***************************** [ DATAS     ] ****************************** */

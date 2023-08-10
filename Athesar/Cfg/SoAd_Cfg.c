@@ -243,7 +243,7 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
         SOAD_UPPER_DOIP,
     }
 };
-const uint32 SoAd_CfgSocketRouteArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SocketRouteArr);
+const uint32 SoAd_SocketRouteArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SocketRouteArr);
 
 //generate runtime data
 SoAd_TxPdu_t SoAd_DynTxPdu[SOAD_GET_ARRAY_SIZE(SoAd_PduRouteArr)];
