@@ -46,9 +46,6 @@ static boolean soad_getSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue, S
 static boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue);
 /* ***************************** [ DATAS     ] ****************************** */
 
-SoAd_SoCon_t SoAd_DynSoConArr[SOAD_CFG_NUM_SOCON];
-SoAd_SoConGr_t SoAd_DynSoConGrArr[SOAD_CFG_NUM_SOCON_GROUP];
-SoAd_TxPdu_t SoAd_DynTxPdu[SOAD_CFG_NUM_TXPDU];
 /* ***************************** [ LOCALS    ] ****************************** */
 
 

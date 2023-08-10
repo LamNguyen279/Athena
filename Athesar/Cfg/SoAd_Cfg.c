@@ -245,5 +245,12 @@ const SoAd_CfgSocketRoute_t SoAd_SocketRouteArr[] =
 };
 const uint32 SoAd_CfgSocketRouteArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SocketRouteArr);
 
+//generate runtime data
+SoAd_TxPdu_t SoAd_DynTxPdu[SOAD_GET_ARRAY_SIZE(SoAd_PduRouteArr)];
+
+SoAd_SoCon_t SoAd_DynSoConArr[SOAD_GET_ARRAY_SIZE(SoAd_SoConArr)];
+
+SoAd_SoConGr_t SoAd_DynSoConGrArr[SOAD_GET_ARRAY_SIZE(SoAd_SoConGrArr)];
+
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */

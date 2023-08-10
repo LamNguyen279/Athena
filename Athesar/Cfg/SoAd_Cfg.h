@@ -12,14 +12,6 @@
 #include "Std_Types.h"
 #include "SoAd_Priv.h"
 /* ***************************** [ MACROS    ] ****************************** */
-#define SOAD_CFG_NUM_SOCON_GROUP                      3
-
-#define SOAD_CFG_NUM_ROUTING_GROUP                    3
-
-#define SOAD_CFG_NUM_TXPDU                            3
-
-#define SOAD_CFG_NUM_SOCON                            3 //SoAd_SoConArrSize
-
 #define SOAD_CFG_SOCON_TRX_BUFF_SIZE                  1500
 
 #define SOAD_CFGDET_USED                              STD_OFF
