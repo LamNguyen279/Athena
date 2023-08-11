@@ -52,6 +52,7 @@
 #define SOAD_INVALID_ROUT_GROUP     ((uint32)-1)
 #define SOAD_INVALID_SOCON          ((SoAd_SoConIdType)-1)
 #define SOAD_INVALID_NUMBER                -1
+#define SOAD_INVALID_PDUID          ((PduIdType)-1)
 
 #define SOAD_RAISE_DEV_ERROR(ApiId, ErrorId)
 
@@ -75,17 +76,19 @@
 #define SOAD_CLEAR_SOCON_REQMASK(SoConId, mask) \
   (SoAd_DynSoConArr[(SoConId)].RequestMask &= ~(mask))
 
-#define SOAD_CHECK_SOCON_NEED_OPEN(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
-#define SOAD_CHECK_SOCON_NEED_CLOSE(SoConId) (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_CLOSE))
+#define SOAD_CHECK_SOCON_NEED_OPEN(SoConId)       (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_OPEN))
+#define SOAD_CHECK_SOCON_NEED_CLOSE(SoConId)      (SOAD_CHECK_SOCON_REQMASK((SoConId), SOAD_SOCCON_REQMASK_CLOSE))
+
+#define SOAD_IS_AUTO_SOCON(SoconId)               (SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketAutomaticSoConSetup == SOAD_TRUE)
+
+#define SOAD_IS_IP_ASSIGNED(SoconId)              (SoAd_DynSoConArr[(SoconId)].IpAddrState == TCPIP_IPADDR_STATE_ASSIGNED)
 
 #define SOAD_IS_SOCON_DATA_ONGOING(SoConId)       \
   (SoAd_DynSoConArr[(SoConId)].RxSsState != SOAD_SS_STOP) || \
-  (SoAd_DynSoConArr[(SoConId)].TxSsState != SOAD_SS_STOP) || \
-  (SoAd_DynSoConArr[(SoConId)].RxQueue.size != 0) || \
-  (SoAd_DynSoConArr[(SoConId)].TxQueue.size != 0)
+  (SoAd_DynSoConArr[(SoConId)].RxQueue.size != 0)
 
-#define SOAD_GET_TCP_SOCONID_BY_TXPDU(TxPduId)      (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
-#define SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId)        SoAd_DynSoConArr[(SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)]
+#define SOAD_GET_SOCONID_BY_TXPDU(TxPduId)        (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
+#define SOAD_GET_SOCON_BY_TXPDU(TxPduId)          (SoAd_DynSoConArr[(SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)])
 //socket group utilities
 #define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
 

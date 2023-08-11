@@ -24,6 +24,7 @@ static void soad_SocketListenRoutine(SoAd_SoConGr_t *SoConGr);
 static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode);
 static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *Info);
 static void soad_SoConIpAssignChgNotifAllUppers(SoAd_SoConIdType SoConId, TcpIp_IpAddrStateType State);
+static void soad_TpRxIndicationAllUppers(SoAd_SoConIdType SoConId, Std_ReturnType Result);
 
 static Std_ReturnType soad_CreateSocket(SoAd_SoConIdType SoConId);
 static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId);
@@ -78,11 +79,14 @@ void _SoAd_HandleSoConState(SoAd_SoConIdType SoConId)
       break;
   }
 
+  /* SWS_SoAd_00588, SWS_SoAd_00604 */
   if(SOAD_CHECK_SOCON_NEED_CLOSE(SoConId))
   {
-    if(SOAD_IS_SOCON_DATA_ONGOING(SoConId))
+    if((SoAd_DynSoConArr[(SoConId)].RxSsState != SOAD_SS_STOP))
     {
-      /*TODO: handle on going TX/RX data */
+      /* SWS_SoAd_00637 */
+      /* (1) Terminate active TP sessions (if any) and notify the upper layer about the termination */
+      SoAd_DynSoConArr[(SoConId)].RxSsState = SOAD_SS_DONE;
     }else
     {
       /* free SoCon connection resource */
@@ -102,17 +106,7 @@ static void soad_CloseSoCon(SoAd_SoConIdType SoConId)
 
 static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 {
-  /* UDP */
-  if(SOAD_IS_UDP_SOCON(SoConId))
-  {
-
-  }
-
-  /* TCP */
-  if(SOAD_IS_TCP_SOCON(SoConId))
-  {
-
-  }
+  SoAd_SoCon_t *soCon = &SoAd_DynSoConArr[SoConId];
 
   soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_OFFLINE);
 
@@ -120,7 +114,25 @@ static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 
   soad_CloseSoCon(SoConId);
 
-  _SoAd_InitSocon(SoConId);
+  memset(soCon->RemoteAddress, 0, SOAD_IPV4_ADD_SIZE);
+
+  soCon->RemotePort = 0;
+
+  soCon->RequestMask = SOAD_SOCCON_REQMASK_NON;
+
+  soad_InitSoConQueue(&(soCon->RxQueue));
+
+  soCon->RxSsState = SOAD_SS_STOP;
+  soCon->RxSsCopiedLength = 0;
+
+  soCon->SoAdSoConState = SOAD_SOCON_OFFLINE;
+
+  soCon->W32Sock = SOAD_W32_INVALID_SOCKET;
+
+  soCon->W32SockState = SOAD_W32SOCK_STATE_INVALID;
+
+  soCon->W32Thread.Hdl = INVALID_HANDLE_VALUE;
+  soCon->W32Thread.Id = SOAD_INVALID_NUMBER;
 }
 
 void _SoAd_InitSocon(SoAd_SoConIdType SoConId)
@@ -175,6 +187,24 @@ void _SoAd_HandleRxData(SoAd_SoConIdType SoConId)
 
 void _SoAd_HandleTxData(PduIdType TxPduId)
 {
+  SoAd_SoConIdType relatedSoCon = SOAD_INVALID_SOCON;
+
+  /* SWS_SoAd_00588, SWS_SoAd_00604 */
+  if(soad_IsFanOutPDU(TxPduId) == SOAD_FALSE)
+  {
+    relatedSoCon = SOAD_GET_SOCONID_BY_TXPDU(TxPduId);
+    if(SOAD_CHECK_SOCON_NEED_CLOSE(relatedSoCon))
+    {
+      if(SoAd_DynTxPdu[TxPduId].TxSsState != SOAD_SS_STOP)
+      {
+        /* handle on going TX/RX data */
+        /* SWS_SoAd_00637 */
+        /* (1) Terminate active TP sessions (if any) and notify the upper layer about the termination */
+        SoAd_DynTxPdu[TxPduId].TxSsState = SOAD_SS_DONE;
+      }
+    }
+  }
+
   soad_HandleTpTxSession(TxPduId);
 }
 
@@ -192,8 +222,12 @@ static void soad_HandleSoConStateInvalid(SoAd_SoConIdType SoConId)
     soad_SoConIpAssignChgNotifAllUppers(SoConId, TCPIP_IPADDR_STATE_ASSIGNED);
   }
 
-  if(SOAD_CHECK_SOCON_NEED_OPEN(SoConId))
+  /* SWS_SoAd_00588 */
+  /* SWS_SoAd_00589 */
+  if((SOAD_CHECK_SOCON_NEED_OPEN(SoConId) || SOAD_IS_AUTO_SOCON(SoConId)) &&
+      SOAD_IS_IP_ASSIGNED(SoConId))
   {
+    /* SWS_SoAd_00590 */
     ret = soad_CreateSocket(SoConId);
 
     if(ret == E_OK)
@@ -330,7 +364,7 @@ Std_ReturnType _SoAd_RequestTpTxSs(PduIdType TxPduId, const PduInfoType *PduInfo
   {
     if(soad_IsFanOutPDU(TxPduId) == SOAD_FALSE)
     {
-      if(SOAD_GET_TCP_SOCON_BY_TXPDU(TxPduId).SoAdSoConState == SOAD_SOCON_ONLINE)
+      if(SOAD_GET_SOCON_BY_TXPDU(TxPduId).SoAdSoConState == SOAD_SOCON_ONLINE)
       {
         SoAd_DynTxPdu[TxPduId].TxSsState = SOAD_SS_START;
         ret = E_OK;
@@ -373,6 +407,7 @@ static void soad_HandleSoConStateNew(SoAd_SoConIdType SoConId)
 {
   Std_ReturnType ret = E_NOT_OK;
 
+  /* SWS_SoAd_00590 */
   ret = soad_BindSocket(SoConId);
 
   if(ret == E_OK)
@@ -394,7 +429,7 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
   {
     if(SOAD_GET_DYN_SOCON_GROUP(SoConId).W32SockListenState == SOAD_W32SOCK_STATE_BIND)
     {
-      //TCP server
+      /* SWS_SoAd_00638, TCP server */
       threadHdl = CreateThread( NULL, SOAD_SOCON_THREAD_STACK,
                 ( LPTHREAD_START_ROUTINE ) soad_SocketListenRoutine,
                 &SOAD_GET_DYN_SOCON_GROUP(SoConId), CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
@@ -424,7 +459,8 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
   }else
   {
     if(SOAD_IS_UDP_SOCON(SoConId))
-    {      //create thread for receive UDP data
+    {
+      /* SWS_SoAd_00639, create thread for receive UDP data */
       threadHdl = CreateThread( NULL, SOAD_SOCON_THREAD_STACK,
                 ( LPTHREAD_START_ROUTINE ) soad_SocketRxRoutine,
                 &SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
@@ -435,7 +471,7 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
         SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
         SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
 
-        //TODO: state = SOAD_SOCON_RECONNECT for UDP listen only
+        /* SWS_SoAd_00591 */
         soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_ONLINE);
 
         SoAd_DynSoConArr[SoConId].W32SockState = SOAD_W32SOCK_STATE_CONNECTED;
@@ -448,7 +484,7 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
 
     }else
     {
-      //TCP client, create thread for Connect
+      /* SWS_SoAd_00590, TCP client, create thread for Connect */
       threadHdl = CreateThread( NULL, SOAD_SOCON_THREAD_STACK,
                 ( LPTHREAD_START_ROUTINE ) soad_SocketConnectRoutine,
                 &SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
@@ -710,6 +746,7 @@ static void soad_SocketListenRoutine(SoAd_SoConGr_t *SoConGr)
           thisSoAdSock->W32Thread.Id = threadId;
           thisSoAdSock->W32Thread.Hdl = threadHdl;
 
+          /* SWS_SoAd_00594 */
           soad_SoConModeChgAllUppers(acceptedSoConId, SOAD_SOCON_ONLINE);
 
           thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_ACCEPTED;
@@ -790,6 +827,7 @@ static void soad_SocketConnectRoutine(SoAd_SoConIdType *SoConId)
 
         if(threadHdl)
         {
+          /* SWS_SoAd_00593, SWS_SoAd_00636 */
           soad_SoConModeChgAllUppers(thisSoConId, SOAD_SOCON_ONLINE);
 
           thisSoAdSock->W32SockState = SOAD_W32SOCK_STATE_CONNECTED;
@@ -851,6 +889,24 @@ static void soad_IfRxIndicationAllUppers(SoAd_SoConIdType SoConId, PduInfoType *
   }
 }
 
+static void soad_TpRxIndicationAllUppers(SoAd_SoConIdType SoConId, Std_ReturnType Result)
+{
+  uint32 socketRoutedestCtn = 0;
+  uint32 socketRoutedest = 0;
+  PduIdType upperRxPduId = 0;
+
+  while(socketRoutedestCtn < SoAd_SoConArr[SoConId].SocketRouteDestListSize)
+  {
+    socketRoutedest = SoAd_SoConArr[SoConId].SocketRouteDestList[socketRoutedestCtn];
+
+    upperRxPduId = SoAd_SocketRouteArr[socketRoutedestCtn].SoAdRxPduRef;
+
+    SOAD_GET_UPPER_FNCTBL_BY_SOCKETROUTEDEST(socketRoutedest).UpperTpRxIndication(upperRxPduId, Result);
+
+    socketRoutedestCtn++;
+  }
+}
+
 static void soad_SoConModeChgAllUppers(SoAd_SoConIdType SoConId, SoAd_SoConModeType Mode)
 {
   uint32 pdurouteCtn = 0;
@@ -886,7 +942,7 @@ static void soad_SoConIpAssignChgNotifAllUppers(SoAd_SoConIdType SoConId, TcpIp_
     pdurouteCtn++;
   }
 
-  SoAd_DynSoConArr[SoConId].SoAdSoConState = State;
+  SoAd_DynSoConArr[SoConId].IpAddrState = State;
 }
 
 static void soad_HandleTpTxSession(PduIdType TxPduId)
@@ -919,7 +975,7 @@ static void soad_HandleTpTxSession(PduIdType TxPduId)
 
         thisTxPdu->TxSsCopiedLength += pduInfo.SduLength;
 
-        /* call Up>_[SoAd][Tp]CopyRxData */
+        /* call Up>_[SoAd][Tp]CopyTxData */
         upperBufferReqRet = SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpCopyTxData(
             TxPduId, &pduInfo, NULL_PTR, &upperAvaiSize);
 
@@ -950,7 +1006,7 @@ static void soad_HandleTpTxSession(PduIdType TxPduId)
 
       thisTxPdu->TxSsCopiedLength += pduInfo.SduLength;
 
-      /* call Up>_[SoAd][Tp]CopyRxData */
+      /* call Up>_[SoAd][Tp]CopyTxData */
       upperBufferReqRet = SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpCopyTxData(
           TxPduId, &pduInfo, NULL_PTR, &upperAvaiSize);
 
@@ -963,19 +1019,27 @@ static void soad_HandleTpTxSession(PduIdType TxPduId)
         }else
         {
           //copy on going
-          thisTxPdu->TxSsLastUpperAskedSize = upperAvaiSize;
           thisTxPdu->TxSsState = SOAD_SS_COPYING;
         }
+
+        thisTxPdu->TxSsLastUpperAskedSize = upperAvaiSize;
       }
 
       break;
     case SOAD_SS_DONE:
-      pduInfo.SduDataPtr = &(thisTxPdu->PduData[0]);
-      pduInfo.SduLength = thisTxPdu->TxSsCopiedLength;
 
-      ret = soad_SendSoCon(SOAD_GET_TCP_SOCONID_BY_TXPDU(TxPduId), &pduInfo);
+      if(thisTxPdu->TxSsLastUpperAskedSize == 0)
+      {
+        pduInfo.SduDataPtr = &(thisTxPdu->PduData[0]);
+        pduInfo.SduLength = thisTxPdu->TxSsCopiedLength;
 
-      SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpTpTxConfirmation(TxPduId, ret);
+        ret = soad_SendSoCon(SOAD_GET_SOCONID_BY_TXPDU(TxPduId), &pduInfo);
+
+        SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpTpTxConfirmation(TxPduId, ret);
+      }else
+      {
+        SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperTpTpTxConfirmation(TxPduId, E_NOT_OK);
+      }
 
       thisTxPdu->TxSsState = SOAD_SS_STOP;
       thisTxPdu->TxSsCopiedLength = 0;
@@ -1107,7 +1171,13 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
       break;
     case SOAD_SS_DONE:
       //Copy done -> UpperTpRxIndication
-      SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
+      if(thisSoCon->RxSsCopiedLength != soConBufferData.length)
+      {
+        SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_NOT_OK);
+      }else
+      {
+        SOAD_GET_TCP_SOCON_UPPER_FNCTB(SoConId).UpperTpRxIndication(socketRoute->SoAdRxPduRef, E_OK);
+      }
       soad_RemoveSoConQueueFirstElement(&(thisSoCon->RxQueue));
       thisSoCon->RxSsState = SOAD_SS_STOP;
       break;

@@ -41,16 +41,16 @@ void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
 
 void SoAd_MainFunction(void)
 {
+  for(PduIdType txPduId = 0; txPduId < SoAd_PduRouteArrSize; txPduId ++)
+  {
+    _SoAd_HandleTxData(txPduId);
+  }
+
   for(SoAd_SoConIdType SoConId = 0; SoConId < SoAd_SoConArrSize; SoConId ++)
   {
     _SoAd_HandleSoConState(SoConId);
 
     _SoAd_HandleRxData(SoConId);
-  }
-
-  for(PduIdType txPduId = 0; txPduId < SoAd_PduRouteArrSize; txPduId ++)
-  {
-    _SoAd_HandleTxData(txPduId);
   }
 }
 
@@ -187,6 +187,8 @@ Std_ReturnType SoAd_SetRemoteAddr(SoAd_SoConIdType SoConId,
 Std_ReturnType SoAd_GetRemoteAddr(SoAd_SoConIdType SoConId, TcpIp_SockAddrType *IpAddrPtr) {
   Std_ReturnType ret = E_NOT_OK;
 
+  /* SWS_SoAd_00743 */
+
   return ret;
 }
 
@@ -204,6 +206,7 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId)
   {
     if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN))
     {
+      /* SWS_SoAd_00588 */
       SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
     }
   }
@@ -211,8 +214,9 @@ Std_ReturnType SoAd_OpenSoCon(SoAd_SoConIdType SoConId)
   return ret;
 }
 
-Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
-  Std_ReturnType ret = E_NOT_OK;
+Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort)
+{
+  Std_ReturnType ret = E_OK;
 
   if(SoConId >= SoAd_SoConArrSize)
   {
@@ -224,6 +228,7 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort) {
   {
     if(!SOAD_CHECK_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE))
     {
+      /* SWS_SoAd_00588 */
       SOAD_SET_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_CLOSE);
       SOAD_CLEAR_SOCON_REQMASK(SoConId, SOAD_SOCCON_REQMASK_OPEN);
     }
