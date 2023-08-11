@@ -114,9 +114,9 @@ static void soad_FreeSoCon(SoAd_SoConIdType SoConId)
 
   soad_CloseSoCon(SoConId);
 
-  memset(soCon->RemoteAddress, 0, SOAD_IPV4_ADD_SIZE);
+  memcpy(&(soCon->RemoteAddress[0]), &(SoAd_SoConArr[SoConId].RemoteIpAddress[0]) , SOAD_IPV4_ADD_SIZE);
 
-  soCon->RemotePort = 0;
+  soCon->RemotePort = SoAd_SoConArr[SoConId].RemotePort;
 
   soCon->RequestMask = SOAD_SOCCON_REQMASK_NON;
 
@@ -745,6 +745,9 @@ static void soad_SocketListenRoutine(uint32 *SoConGrIdx)
 
       if(thisSoCon->W32SockState == SOAD_W32SOCK_STATE_LISTENING)
       {
+        memcpy(&(thisSoCon->RemoteAddress[0]), inet_ntoa(addr.sin_addr), SOAD_IPV4_ADD_SIZE);
+        thisSoCon->RemotePort = ntohs(addr.sin_port);
+
         thisSoCon->W32Sock = acceptSocket;
 
         //create thread for receive client data
