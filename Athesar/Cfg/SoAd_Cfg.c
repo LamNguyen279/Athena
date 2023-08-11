@@ -121,7 +121,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 {
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */
-        SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
+        SOAD_TRUE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
         10000,/* SoAdSocketLocalPort */
@@ -136,7 +136,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
     },
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */
-        SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
+        SOAD_TRUE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
         10000,/* SoAdSocketLocalPort */
@@ -151,7 +151,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
     },
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */
-        SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
+        SOAD_TRUE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
         40000,/* SoAdSocketLocalPort */

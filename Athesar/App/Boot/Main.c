@@ -33,12 +33,6 @@ void OsTask_BswMain_10ms(void)
 {
   vEventMask_t OsTask_BswMain_10msMask;
 
-  SoAd_OpenSoCon(0);
-
-  SoAd_OpenSoCon(1);
-
-  SoAd_OpenSoCon(2);
-
   while(1)
   {
     vEventWait( OsEvent_BswMainFunction_10ms );
