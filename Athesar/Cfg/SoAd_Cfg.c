@@ -154,7 +154,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
-        30000,/* SoAdSocketLocalPort */
+        40000,/* SoAdSocketLocalPort */
         SOAD_FALSE,/* SoAdSocketMsgAcceptanceFilterEnabled */
         SOAD_TRUE,/* SoAdSocketSoConModeChgNotification */
         0,/* SoAdSocketTpRxBufferMin */
@@ -176,6 +176,9 @@ static const uint32 SoAdSoCon1_SocketRouteDestList[]={1};
 
 static const uint32 SoAdSoCon2_PduRouteList[]={2};
 static const uint32 SoAdSoCon2_SocketRouteDestList[]={2};
+
+static const uint32 SoAdSoCon3_PduRouteList[]={2};
+static const uint32 SoAdSoCon3_SocketRouteDestList[]={2};
 
 const SoAd_CfgSoCon_t SoAd_SoConArr[] =
 {
@@ -201,13 +204,23 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
     },
     /* SoAdSoCon2 */
     {
-        "127.0.0.2", /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
-        20002,/* SoAdSocketRemotePort */
+        SOAD_ANY_IP, /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
+        SOAD_ANY_PORT,/* SoAdSocketRemotePort */
         2, /* SoConGrIdx */
         &SoAdSoCon2_PduRouteList[0], /* PduRouteList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon2_PduRouteList), /* PduRouteListSize */
         &SoAdSoCon2_SocketRouteDestList[0], /* SocketRouteDestList */
         SOAD_GET_ARRAY_SIZE(SoAdSoCon2_SocketRouteDestList), /* SocketRouteDestListSize */
+    },
+    /* SoAdSoCon3 */
+    {
+        SOAD_ANY_IP, /* SoAdSocketRemoteIpAddress[SOAD_IPV4_ADD_SIZE] */
+        SOAD_ANY_PORT,/* SoAdSocketRemotePort */
+        2, /* SoConGrIdx */
+        &SoAdSoCon3_PduRouteList[0], /* PduRouteList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon3_PduRouteList), /* PduRouteListSize */
+        &SoAdSoCon3_SocketRouteDestList[0], /* SocketRouteDestList */
+        SOAD_GET_ARRAY_SIZE(SoAdSoCon3_SocketRouteDestList), /* SocketRouteDestListSize */
     }
 };
 const uint32 SoAd_SoConArrSize = SOAD_GET_ARRAY_SIZE(SoAd_SoConArr);

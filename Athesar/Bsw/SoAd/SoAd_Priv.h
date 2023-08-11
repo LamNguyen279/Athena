@@ -54,6 +54,9 @@
 #define SOAD_INVALID_NUMBER                -1
 #define SOAD_INVALID_PDUID          ((PduIdType)-1)
 
+#define SOAD_ANY_PORT               ((uint32)0)
+#define SOAD_ANY_IP                 ("0.0.0.0")
+
 #define SOAD_RAISE_DEV_ERROR(ApiId, ErrorId)
 
 #define SOAD_UNUSED(variable) (void)variable
@@ -87,8 +90,8 @@
   (SoAd_DynSoConArr[(SoConId)].RxSsState != SOAD_SS_STOP) || \
   (SoAd_DynSoConArr[(SoConId)].RxQueue.size != 0)
 
-#define SOAD_GET_SOCONID_BY_TXPDU(TxPduId)        (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
-#define SOAD_GET_SOCON_BY_TXPDU(TxPduId)          (SoAd_DynSoConArr[(SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)])
+#define SOAD_GET_SOCONID_BY_TXPDU(TxPduId)            (SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)
+#define SOAD_GET_DYN_SOCON_BY_TXPDU(TxPduId)          (SoAd_DynSoConArr[(SoAd_PduRouteDestArr[SoAd_PduRouteArr[TxPduId].SoAdPduRouteDestBase].SoAdTxSoConIdx)])
 //socket group utilities
 #define SOAD_GET_DYN_SOCON_GROUP(SoConId)         (SoAd_DynSoConGrArr[SOAD_GET_SOCON_GROUPID(SoConId)])
 
@@ -97,7 +100,7 @@
 #define SOAD_GET_SOCON_PROTOCOL(SoConId)          (SOAD_GET_SOCON_GROUP((SoConId)).W32ProtocolType)
 #define SOAD_IS_UDP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_UDP)
 #define SOAD_IS_TCP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_TCP)
-#define SOAD_IS_TCP_SERVER_SOCON(SoConId)         ( (SOAD_IS_TCP_SOCON((SoConId)) && SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketTcpInitiate) )
+#define SOAD_IS_TCP_SERVER_SOCON(SoConId)         ( (SOAD_IS_TCP_SOCON((SoConId)) && (SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketTcpInitiate == SOAD_FALSE)) )
 
 //W32 utilities
 #define SOAD_W32_INVALID_SOCKET   INVALID_SOCKET

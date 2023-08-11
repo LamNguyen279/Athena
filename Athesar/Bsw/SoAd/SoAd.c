@@ -14,7 +14,6 @@
 /* ***************************** [ DECLARES  ] ****************************** */
 /* ***************************** [ DATAS     ] ****************************** */
 /* ***************************** [ LOCALS    ] ****************************** */
-static Std_ReturnType soad_validateSoconId(SoAd_SoConIdType SoconId);
 /* ***************************** [ FUNCTIONS ] ****************************** */
 void SoAd_Init(const SoAd_ConfigType *ConfigPtr) {
 
@@ -59,10 +58,11 @@ void SoAd_LocalIpAddrAssignmentChg(TcpIp_LocalAddrIdType IpAddrId, TcpIp_IpAddrS
 
 }
 
+/* SWS_SoAd_00539 */
 Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
 {
-
   Std_ReturnType ret = E_OK;
+  PduInfoType triggerPduInfo;
 
   if(TxPduId >= SoAd_PduRouteArrSize)
   {
@@ -79,11 +79,13 @@ Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
 
   if(PduInfoPtr == NULL_PTR)
   {
-    //TODO: raise DET
-    ret = E_NOT_OK;
-  }
-
-  if(ret == E_OK)
+    /* SWS_SoAd_00731, SoAd shall use <Up>_[SoAd][If]TriggerTransmit>()  */
+    if(SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperIfTriggerTransmit != NULL_PTR)
+    {
+      SOAD_GET_UPPER_FNCTBL_BY_PDUROUTE(TxPduId).UpperIfTriggerTransmit(TxPduId, &triggerPduInfo);
+      ret = _SoAd_IfPduFanOut(TxPduId, PduInfoPtr);
+    }
+  }else
   {
     ret = _SoAd_IfPduFanOut(TxPduId, PduInfoPtr);
   }
@@ -91,6 +93,7 @@ Std_ReturnType SoAd_IfTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
   return ret;
 }
 
+/* SWS_SoAd_00551 */
 Std_ReturnType SoAd_TpTransmit(PduIdType TxPduId, const PduInfoType *PduInfoPtr)
 {
   Std_ReturnType ret = E_OK;
