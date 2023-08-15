@@ -9,6 +9,7 @@
 #include "vScheduler.h"
 #include "vTask.h"
 #include "vOs_Cfg.h"
+#include "vAlarm.h"
 
 /*****************************************************************************
  * Private types
@@ -335,6 +336,7 @@ static void _vSchedulerMainFunction(void)
 {
   _vSchedulerHandleIsr();
   _vShedulerHandleTask();
+  vAlarmScheduler();
 }
 
 /*****************************************************************************

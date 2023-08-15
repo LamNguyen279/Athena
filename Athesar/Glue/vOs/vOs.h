@@ -9,19 +9,24 @@
 #define VOS_H_
 
 #include "vOs_Cfg.h"
-#include "Std_Types.h"
+#include "stdint.h"
+#include "stdbool.h"
 
 #ifndef VOS_NULL
 #define VOS_NULL  NULL
 #endif
 
 #ifndef VOS_FALSE
-#define VOS_FALSE  FALSE
+#define VOS_FALSE  false
 #endif
 
 #ifndef VOS_TRUE
-#define VOS_TRUE  TRUE
+#define VOS_TRUE  true
 #endif
+
+typedef uint8_t vOsStatusType;
+#define VOS_OK            ((vOsStatusType)0)
+#define VOS_NOT_OK        ((vOsStatusType)1)
 
 typedef void (*vOsHook_t)(void);
 

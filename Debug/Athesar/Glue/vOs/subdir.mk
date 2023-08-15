@@ -4,16 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Athesar/Glue/vOs/vAlarm.c \
 ../Athesar/Glue/vOs/vEvent.c \
 ../Athesar/Glue/vOs/vScheduler.c \
 ../Athesar/Glue/vOs/vTask.c 
 
 OBJS += \
+./Athesar/Glue/vOs/vAlarm.o \
 ./Athesar/Glue/vOs/vEvent.o \
 ./Athesar/Glue/vOs/vScheduler.o \
 ./Athesar/Glue/vOs/vTask.o 
 
 C_DEPS += \
+./Athesar/Glue/vOs/vAlarm.d \
 ./Athesar/Glue/vOs/vEvent.d \
 ./Athesar/Glue/vOs/vScheduler.d \
 ./Athesar/Glue/vOs/vTask.d 
