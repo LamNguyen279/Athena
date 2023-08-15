@@ -157,16 +157,19 @@ Std_ReturnType SoAd_GetSoConId(PduIdType TxPduId, SoAd_SoConIdType *SoConIdPtr) 
         }else
         {
           //no SOCON in SoAdPduRouteDest -> invalid CONFIG
+          ret = E_NOT_OK;
         }
       }else
       {
         /* SWS_SoAd_00724 */
         //call SoAd_GetSoConId in case fan out PDU
+        ret = E_NOT_OK;
       }
     }else
     {
       /* SWS_SoAd_00724 */
       //call SoAd_GetSoConId in case fan out PDU
+      ret = E_NOT_OK;
     }
   }
 
