@@ -17,6 +17,9 @@
 #include "Std_Types.h"
 #include "ComStack_Types.h"
 #include "SoAd.h"
+#include <winsock2.h>
+#include <Ws2tcpip.h>
+#include <winerror.h>
 /* ***************************** [ MACROS    ] ****************************** */
 #define SOAD_SOCON_BUFF_SIZE                      1500
 #define SOAD_SOCON_QUEUE_DEPTH                    50
@@ -33,13 +36,13 @@
   printf("LINE: %d, FUNC: %s, LOG: ", __LINE__, __func__); \
   printf((SomeString)); \
   printf("\n"); \
-  fflush(_REENT->_stdout)
+  fflush(stdout)
 
 #define SOAD_LOG_PAR(SomeString, SomeThing) \
   printf("LINE: %d, FUNC: %s, LOG: ", __LINE__, __func__); \
   printf((SomeString), (SomeThing)); \
   printf("\n"); \
-  fflush(_REENT->_stdout)
+  fflush(stdout)
 #else
 #define SOAD_CONSOLE_LOG(someString, SomeThing)
 #endif

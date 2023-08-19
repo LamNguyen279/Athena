@@ -4,7 +4,8 @@
  *  Created on: Aug 15, 2023
  *      Author: ADMIN
  */
-
+#ifndef VALARM_H_
+#define VALARM_H_
 /* ***************************** [ INCLUDES  ] ****************************** */
 #include "stdint.h"
 #include "stdbool.h"
@@ -56,3 +57,4 @@ void vAlarmScheduler(void);
 extern vAlarmHandler_t *vAlarm;
 /* ***************************** [ LOCALS    ] ****************************** */
 /* ***************************** [ FUNCTIONS ] ****************************** */
+#endif

@@ -72,6 +72,7 @@ extern BufReq_ReturnType DoIP_SoAdTpStartOfReception(
 
   if(info->SduLength == 0)
   {
+    srand(DoIP_SoAdTpStartOfReceptionCtn);
     *bufferSizePtr = (rand() % DOIP_RANDOM_BUFF_SIZE);
   }
 
@@ -109,6 +110,7 @@ BufReq_ReturnType DoIP_SoAdTpCopyRxData(
 
   fflush(stdout);
 
+  srand(DoIP_SoAdTpCopyRxDataCtn);
   *bufferSizePtr = (rand() % DOIP_RANDOM_BUFF_SIZE);
 
   return BUFREQ_OK;
@@ -127,6 +129,8 @@ void DoIP_SoAdTpRxIndication(
   printf("result = %s \n", STD_RETURN_TYPE_AS_STRING(result));
 
   printf("Copied Size: %d\n", DoIP_SoAdTpCopyRxDataCopyIdx);
+
+  DoIP_SoAdTpCopyRxDataBuff[id][DoIP_SoAdTpCopyRxDataCopyIdx] = '\0';
   printf("Copied Buffer:\n%s\n", &DoIP_SoAdTpCopyRxDataBuff[id][0]);
 
   memset(&DoIP_SoAdTpCopyRxDataBuff[id][0], 0, sizeof(DoIP_SoAdTpCopyRxDataBuff[0]));
@@ -204,6 +208,7 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
   if(info->SduLength == 0)
   {
     //ask size from SoAd
+    srand(DoIP_SoAdTpCopyTxDataCtn);
     *availableDataPtr = (rand() % DOIP_RANDOM_BUFF_SIZE) + 1;
     memcpy(&DoIP_SoAdTpCopyTxDataBuff[0], DOIP_SOADTPCOPY_STRING, DOIP_SOADTPCOPY_STRING_SIZE);
   }else
@@ -217,6 +222,7 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
     DoIP_SoAdTpCopyTxDataBuffCopiedLength[id] += info->SduLength;
 
     //create random buffer size for testing SOAD
+    srand(DoIP_SoAdTpCopyTxDataCtn);
     *availableDataPtr = (rand() % DOIP_RANDOM_BUFF_SIZE) + 1;
 
     if((*availableDataPtr + DoIP_SoAdTpCopyTxDataBuffCopiedLength[id]) >= DOIP_SOADTPCOPY_STRING_SIZE)

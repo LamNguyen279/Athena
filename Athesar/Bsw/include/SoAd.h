@@ -4,8 +4,6 @@
 /* ================================ [ INCLUDES  ] ============================================== */
 #include "ComStack_Types.h"
 #include "TcpIp.h"
-#include <winsock2.h>
-#include <Ws2tcpip.h>
 
 #ifdef __cplusplus
 extern "C" {

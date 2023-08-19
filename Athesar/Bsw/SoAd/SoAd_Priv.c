@@ -684,6 +684,7 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
     {
       //Exceed SOAD_CFG_SOCON_RX_BUFF_SIZE, TODO: handle ?
       SOAD_LOG("Exceed SOAD_CFG_SOCON_RX_BUFF_SIZE");
+      SOAD_LOG("OR Reject due to Same UDP SoCon");
     }
   }
 }
@@ -1236,6 +1237,7 @@ static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId)
 
       break;
     case SOAD_SS_DONE:
+      soad_getSoConQueueFirstElement(&(thisSoCon->RxQueue), &soConBufferData);
       //Copy done -> UpperTpRxIndication
       /* SWS_SoAd_00641 */
       if(thisSoCon->RxSsCopiedLength != soConBufferData.length)

@@ -15,7 +15,7 @@
 
 #define VOS_CFG_IDLEHOOK OsIdleHook
 
-//#define VOS_CFG_DEBUG_ENABLED
+#define VOS_CFG_DEBUG_ENABLED
 
 /* Define Event */
 #define OsEvent_BswMainFunction_10ms      1

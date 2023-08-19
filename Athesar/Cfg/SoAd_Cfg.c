@@ -39,13 +39,13 @@ const SoAd_CfgPduRoute_t SoAd_PduRouteArr[] =
         SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
         SOAD_UPPER_DOIP, /* upper layer */
         0, /* SoAdPduRouteDestBase */
-        3, /* SoAdPduRouteDestCtn */
+        1, /* SoAdPduRouteDestCtn */
     },
     /* PduRoute 1 */
     {
         SOAD_COLLECT_LAST_IS_BEST, /* SoAdTxPduCollectionSemantics */
         2, /* SoAdTxPduRef */
-        SOAD_UPPER_IF, /* SoAdTxUpperLayerType */
+        SOAD_UPPER_TP, /* SoAdTxUpperLayerType */
         SOAD_UPPER_DOIP, /* upper layer */
         1, /* SoAdPduRouteDestBase */
         1, /* SoAdPduRouteDestCtn */

@@ -31,11 +31,14 @@ typedef uint8_t vOsStatusType;
 typedef void (*vOsHook_t)(void);
 
 #ifdef VOS_CFG_DEBUG_ENABLED
-#define VOS_CONSOLELOG(someString, someThing) \
-  printf((someString),(someThing)); \
+#include "stdio.h"
+#define VOS_CONSOLELOG(SomeString, SomeThing) \
+  printf("LINE: %d, FUNC: %s, LOG: ", __LINE__, __func__); \
+  printf((SomeString), (SomeThing)); \
+  printf("\n"); \
   fflush(stdout)
 #else
-#define VOS_CONSOLELOG(someString, someThing)
+#define VOS_CONSOLELOG(SomeString, SomeThing)
 #endif
 
 #endif /* VOS_H_ */

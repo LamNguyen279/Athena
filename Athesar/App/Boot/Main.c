@@ -9,12 +9,13 @@
                > ^ <   > ^ <
  *
  */
-
+#include <stdio.h>
 
 #include "vTask.h"
 #include "vScheduler.h"
 #include "vEvent.h"
 #include "vAlarm.h"
+#include "vIsr.h"
 
 #include "SoAd.h"
 
@@ -24,7 +25,6 @@ volatile vTaskHandler_t *Task_100ms;
 
 volatile vAlarmHandler_t *BswMainAlarm_10ms;
 volatile vAlarmHandler_t *Alarm_1ms;
-volatile vAlarmHandler_t *AlarmTest;
 
 void OsIdleHook()
 {
@@ -79,6 +79,8 @@ void OsTask_100ms(void)
     break;
   }
 
+  Sleep(1000);
+
   vTaskTerminate();
 }
 
@@ -89,19 +91,28 @@ void OsTask_PostOsStartup(void)
   vTaskTerminate();
 }
 
-void AlarmCallBackFncTest()
+uint32 Isr_KeyA_PressedCtn = 0;
+void Isr_KeyA_Pressed()
 {
-  static uint32 AlarmCallBackFncTestCtn;
+  Isr_KeyA_PressedCtn++;
+  printf("LINE: %d, FUNC: %s() %d \n", __LINE__, __func__, Isr_KeyA_PressedCtn);
+  fflush(stdout);
 
-  if(AlarmCallBackFncTestCtn == 10)
-  {
-    vAlarmStop(AlarmTest);
-  }else
-  {
-    vAlarmStart(AlarmTest);
-  }
+  TestCaseIdx = 4;
+  TestSoConIdx = 0;
+  TestTxPduId = 0;
+}
 
-  AlarmCallBackFncTestCtn++;
+uint32 Isr_Key1_PressedCtn = 0;
+void Isr_Key1_Pressed()
+{
+  Isr_Key1_PressedCtn++;
+  printf("LINE: %d, FUNC: %s() %d \n", __LINE__, __func__, Isr_Key1_PressedCtn);
+  fflush(stdout);
+
+  TestCaseIdx = 5;
+  TestSoConIdx = 1;
+  TestTxPduId = 1;
 }
 
 int main()
@@ -110,6 +121,7 @@ int main()
   vTaskInit();
   vSchedulerInit();
   vEventInit();
+  vIsrInit();
 
   PostOsStartupTask = vTaskCreate(OsTask_PostOsStartup, 255, VTASK_PREEMP_NON);
   BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_NON);
@@ -130,19 +142,11 @@ int main()
       (void *)Task_100ms,
   };
 
-  vAlarmPar_t AlarmTestPar =
-  {
-      VALARM_MANUAL,
-      100,
-      VALARM_ACTION_CALLBACK,
-      (void *)AlarmCallBackFncTest,
-  };
-
   BswMainAlarm_10ms = vAlarmCreate(&bswMainAlarmPar_10ms);
   Alarm_1ms = vAlarmCreate(&AlarmPar_100ms);
 
-  AlarmTest = vAlarmCreate(&AlarmTestPar);
-  vAlarmStart(AlarmTest);
+  vIsrCreate(VISR_MASK_KEY_A, &Isr_KeyA_Pressed);
+  vIsrCreate(VISR_MASK_KEY_1, &Isr_Key1_Pressed);
 
   vTaskActivate(PostOsStartupTask);
 

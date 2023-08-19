@@ -10,7 +10,7 @@
 #include "vTask.h"
 #include "vOs_Cfg.h"
 #include "vAlarm.h"
-
+#include "vIsr.h"
 /*****************************************************************************
  * Private types
  ****************************************************************************/
@@ -41,7 +41,7 @@ typedef struct _vScheduler_t
 static uint8_t _vSheduleInitFlag = VOS_FALSE;
 static void *_vSchedulerMutex;
 static vOsHook_t _vSchedulerIdeHookFncPtr;
-static vScheduler_t _vScheduler;
+vScheduler_t _vScheduler;
 vTaskHandler_t *vSchedulerCurTask;
 
 /*****************************************************************************
@@ -61,13 +61,15 @@ void vSchedulerInit(void)
   _vScheduler.ReadyTasks = VOS_NULL;
   _vSchedulerIdeHookFncPtr = &VOS_CFG_IDLEHOOK;
 
-  _vSchedulerMutex = CreateMutex(VOS_NULL, VOS_FALSE, VOS_NULL);
+  _vSchedulerMutex = CreateMutex(NULL, FALSE, L"_vSchedulerMutex");
 
   _vSheduleInitFlag = VOS_TRUE;
 }
 
 void vSchedulerStart(void)
 {
+  DWORD waitResult;
+
   if(_vSheduleInitFlag == VOS_TRUE)
   {
     _vScheduler.State = VSCHEDULER_STATE_RUNNING;
@@ -75,7 +77,14 @@ void vSchedulerStart(void)
     while(1)
     {
       Sleep(VOS_CFG_SYSTICK_MS);
-      _vSchedulerMainFunction();
+      waitResult = WaitForSingleObject( _vSchedulerMutex, INFINITE );
+
+      if(waitResult == WAIT_OBJECT_0)
+      {
+        _vSchedulerMainFunction();
+      }
+
+      ReleaseMutex( _vSchedulerMutex );
     }
   }
 }
@@ -265,7 +274,7 @@ void vSchedulerTerminateTask(void)
     task->SubState = VTASK_SUBSTATE_SUSPENDED_AGAIN;
     _vScheduler.CurTask = VOS_NULL;
 
-    VOS_CONSOLELOG("Terminate Task: %d\n", task->W32Thread.Id);
+//    VOS_CONSOLELOG("Terminate Task: %d\n", task->W32Thread.Id);
 
     TerminateThread(task->W32Thread.Hdl, 0);
   }else
@@ -276,8 +285,6 @@ void vSchedulerTerminateTask(void)
 
 static void _vShedulerHandleTask(void)
 {
-  WaitForSingleObject( _vSchedulerMutex, INFINITE );
-
   vTaskHandler_t *task = _vSchedulerDequeueTask();
   if(task != VOS_NULL)
   {
@@ -324,17 +331,11 @@ static void _vShedulerHandleTask(void)
         break;
     }
   }
-  ReleaseMutex( _vSchedulerMutex );
-}
-
-static void _vSchedulerHandleIsr(void)
-{
-
 }
 
 static void _vSchedulerMainFunction(void)
 {
-  _vSchedulerHandleIsr();
+  vIsrScheduler();
   _vShedulerHandleTask();
   vAlarmScheduler();
 }
