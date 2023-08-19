@@ -132,7 +132,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         VTCPIP_AF_INET, /* W32AfType */
         VTCPIP_SOCK_DGRAM, /* W32SocketType */
         VTCPIP_IPPROTO_UDP, /* W32ProtocolType */
-        "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
+        "224.1.1.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */

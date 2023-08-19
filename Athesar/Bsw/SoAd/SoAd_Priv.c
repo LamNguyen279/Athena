@@ -35,6 +35,7 @@ static Std_ReturnType soad_FindMatchSocket(SOCKADDR_IN *addr, SoAd_SoConIdType *
 static boolean soad_IsFanOutPDU(PduIdType TxPduId);
 
 static Std_ReturnType soad_IpCmp(char *s1, char *s2, uint32 size);
+static boolean soad_isMulticastIpv4Addr(const char *ip_address);
 
 static void soad_HandleTpRxSession(SoAd_SoConIdType SoConId);
 static void soad_HandleTpTxSession(SoAd_SoConIdType SoConId);
@@ -430,6 +431,8 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
   DWORD threadId;
   HANDLE threadHdl;
 
+  struct ip_mreq mreq;
+
   if(SOAD_IS_TCP_SERVER_SOCON(SoConId))
   {
     if(SOAD_GET_DYN_SOCON_GROUP(SoConId).W32SockListenState == SOAD_W32SOCK_STATE_BIND)
@@ -466,27 +469,42 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
     if(SOAD_IS_UDP_SOCON(SoConId))
     {
       /* SWS_SoAd_00639, create thread for receive UDP data */
-      threadHdl = CreateThread( NULL, SOAD_SOCON_THREAD_STACK,
-                ( LPTHREAD_START_ROUTINE ) soad_SocketRxRoutine,
-                &SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
-                &threadId );
-
-      if(threadHdl != INVALID_HANDLE_VALUE)
+      if(SOAD_IS_MULTICAST_SOCON(SoConId))
       {
-        SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
-        SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
+        mreq.imr_multiaddr.s_addr = inet_addr(SOAD_GET_SOCON_GROUP(SoConId).W32LocalAddress);
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
-        /* SWS_SoAd_00591 */
-        soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_ONLINE);
-
-        SoAd_DynSoConArr[SoConId].W32SockState = SOAD_W32SOCK_STATE_CONNECTED;
-
-        ResumeThread(threadHdl);
-      }else
-      {
-        ret = E_NOT_OK;
+        if (setsockopt(SoAd_DynSoConArr[SoConId].W32Sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+            (char*)&mreq, sizeof(mreq)) == SOCKET_ERROR)
+        {
+            SOAD_LOG("Join multicast group failed.\n");
+            ret = E_NOT_OK;
+        }
       }
 
+      if(ret == E_OK)
+      {
+        threadHdl = CreateThread( NULL, SOAD_SOCON_THREAD_STACK,
+                  ( LPTHREAD_START_ROUTINE ) soad_SocketRxRoutine,
+                  &SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                  &threadId );
+
+        if(threadHdl != INVALID_HANDLE_VALUE)
+        {
+          SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
+          SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;
+
+          /* SWS_SoAd_00591 */
+          soad_SoConModeChgAllUppers(SoConId, SOAD_SOCON_ONLINE);
+
+          SoAd_DynSoConArr[SoConId].W32SockState = SOAD_W32SOCK_STATE_CONNECTED;
+
+          ResumeThread(threadHdl);
+        }else
+        {
+          ret = E_NOT_OK;
+        }
+      }
     }else
     {
       /* SWS_SoAd_00590, TCP client, create thread for Connect */
@@ -598,6 +616,11 @@ static Std_ReturnType soad_BindSocket(SoAd_SoConIdType SoConId)
     }else
     {
       //TCP client or UDP
+      if(SOAD_IS_MULTICAST_SOCON(SoConId))
+      {
+        sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+      }
+
       iResult = bind(thisSoCon->W32Sock, (SOCKADDR *) &sockaddr, sizeof (sockaddr));
       if (iResult == SOCKET_ERROR) {
           ret = E_NOT_OK;
@@ -1303,5 +1326,36 @@ boolean soad_RemoveSoConQueueFirstElement(SoAd_SocketBufferQueue_t *queue)
     queue->front = (queue->front + 1) % SOAD_SOCON_QUEUE_DEPTH;
     queue->size--;
     return TRUE;
+}
+
+static boolean soad_isMulticastIpv4Addr(const char *ip_address)
+{
+    // Convert the IPv4 address to a 32-bit unsigned integer
+  boolean ret = SOAD_FALSE;
+
+  uint32_t ip_num = 0;
+  int octet[4];
+
+  if (sscanf(ip_address, "%d.%d.%d.%d", &octet[0], &octet[1], &octet[2], &octet[3]) != 4)
+  {
+      return 0; // Invalid IP format
+  }
+  for (int i = 0; i < 4; i++)
+  {
+      if (octet[i] < 0 || octet[i] > 255) {
+          ret = SOAD_FALSE; // Invalid octet value
+      }
+      ip_num = (ip_num << 8) | octet[i];
+  }
+
+  // Check if the IP address is within the multicast range
+  uint32_t multicast_range_start = 0xE0000000; // 224.0.0.0
+  uint32_t multicast_range_end = 0xEFFFFFFF;   // 239.255.255.255
+  if (ip_num >= multicast_range_start && ip_num <= multicast_range_end)
+  {
+      ret = SOAD_TRUE; // IP address is multicast
+  }
+
+  return ret; // IP address is not multicast
 }
 /* ***************************** [ FUNCTIONS ] ****************************** */
