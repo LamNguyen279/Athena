@@ -6,7 +6,7 @@ Athesar Project
 
 Enviroment Setup
 - Eclipse for Coding, Debugging, Compiling
-- Cygwin for GCC, GDB
+- MinGw for GCC, GDB
 
 Source Tree <br />
 &emsp;ProjectRoot <br />
