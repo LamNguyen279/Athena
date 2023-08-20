@@ -33,7 +33,7 @@
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.PE64" id="cdt.managedbuild.target.gnu.platform.mingw.base.1261141125" name="Debug Platform" osList="win32" superClass="cdt.managedbuild.target.gnu.platform.mingw.base"/>
                             							
-                            <builder buildPath="${workspace_loc:/Athena}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.102488058" name="CDT Internal Builder.Debug" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
+                            <builder buildPath="${workspace_loc:/Athena}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.102488058" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
                             							
                             <tool id="cdt.managedbuild.tool.gnu.assembler.mingw.base.424383405" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.base">
                                 								
@@ -51,7 +51,7 @@
                             							
                             <tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.base.82820170" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.base">
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.689900835" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.689900835" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Athesar/App}&quot;"/>
                                     									
@@ -75,11 +75,23 @@
                                     								
                                 </option>
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1997859626" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1997859626" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="SOAD_DEBUG"/>
                                     								
                                 </option>
+                                								
+                                <option id="gnu.c.compiler.option.dialect.std.914069450" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.optimization.level.1499611350" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.level.38072126" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.prof.18018579" name="Generate prof information (-p)" superClass="gnu.c.compiler.option.debugging.prof" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.gprof.833411441" name="Generate gprof information (-pg)" superClass="gnu.c.compiler.option.debugging.gprof" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.codecov.1103638294" name="Generate gcov information (-ftest-coverage -fprofile-arcs)" superClass="gnu.c.compiler.option.debugging.codecov" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.747503520" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
                                 							
@@ -89,13 +101,13 @@
                             							
                             <tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base.2131942064" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base">
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1684710954" superClass="gnu.cpp.link.option.libs" valueType="libs">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1684710954" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
                                     									
                                     <listOptionValue builtIn="false" value="wsock32"/>
                                     								
                                 </option>
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.1109126624" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.paths.1109126624" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/Athena/Athesar/Bsw/include}&quot;"/>
                                     									
@@ -123,6 +135,8 @@
                         						
                         <toolChain id="cdt.managedbuild.toolchain.gnu.mingw.base.823197872" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.base">
                             							
+                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.PE64" id="cdt.managedbuild.target.gnu.platform.mingw.base" name="Debug Platform" osList="win32" superClass="cdt.managedbuild.target.gnu.platform.mingw.base"/>
+                            							
                             <tool id="cdt.managedbuild.tool.gnu.assembler.mingw.base.2018747104" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.base">
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.assembler.input.301022632" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
@@ -139,7 +153,7 @@
                             							
                             <tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.base.46239627" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.base">
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1970464808" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1970464808" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Athesar/App}&quot;"/>
                                     									
@@ -163,11 +177,23 @@
                                     								
                                 </option>
                                 								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1660170578" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1660170578" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
                                     									
                                     <listOptionValue builtIn="false" value="SOAD_DEBUG"/>
                                     								
                                 </option>
+                                								
+                                <option id="gnu.c.compiler.option.dialect.std.264677612" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.optimization.level.1755821669" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.level.1582870" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.prof.1665932977" name="Generate prof information (-p)" superClass="gnu.c.compiler.option.debugging.prof" value="false" valueType="boolean"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.gprof.12838782" name="Generate gprof information (-pg)" superClass="gnu.c.compiler.option.debugging.gprof" value="false" valueType="boolean"/>
+                                								
+                                <option id="gnu.c.compiler.option.debugging.codecov.822544735" name="Generate gcov information (-ftest-coverage -fprofile-arcs)" superClass="gnu.c.compiler.option.debugging.codecov" value="false" valueType="boolean"/>
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.394715592" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
                                 							
