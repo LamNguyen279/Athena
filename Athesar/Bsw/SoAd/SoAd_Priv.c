@@ -489,7 +489,7 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
                   &SoAd_DynSoConArr[SoConId].SoAdSoConId, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
                   &threadId );
 
-        if(threadHdl != INVALID_HANDLE_VALUE)
+        if(threadHdl)
         {
           SoAd_DynSoConArr[SoConId].W32Thread.Id = threadId;
           SoAd_DynSoConArr[SoConId].W32Thread.Hdl = threadHdl;

@@ -121,7 +121,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
 {
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */
-        SOAD_TRUE,/* SoAdSocketAutomaticSoConSetup */
+        SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
         10000,/* SoAdSocketLocalPort */

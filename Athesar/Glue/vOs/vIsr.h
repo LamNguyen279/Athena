@@ -13,6 +13,7 @@
 #define VISR_MASK_KEY_A     'A'
 #define VISR_MASK_KEY_1     '1'
 #define VISR_MASK_KEY_2     '2'
+#define VISR_MASK_KEY_3     '3'
 
 #define VISR_CAT2_STACK_SIZE  15000
 /* ***************************** [ TYPES     ] ****************************** */

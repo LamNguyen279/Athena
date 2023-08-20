@@ -20,8 +20,8 @@
 #include "SoAd.h"
 
 volatile vTaskHandler_t *PostOsStartupTask;
-volatile vTaskHandler_t *BswMainTask_10ms;
-volatile vTaskHandler_t *Task_100ms;
+volatile vTaskHandler_t *BswMainTask_1ms;
+volatile vTaskHandler_t *Task_10ms;
 
 volatile vAlarmHandler_t *BswMainAlarm_10ms;
 volatile vAlarmHandler_t *Alarm_1ms;
@@ -32,7 +32,7 @@ void OsIdleHook()
   a++;
 }
 
-void OsTask_BswMain_10ms(void)
+void OsTask_BswMain_1ms(void)
 {
   SoAd_MainFunction();
 
@@ -42,7 +42,7 @@ void OsTask_BswMain_10ms(void)
 uint32 TestCaseIdx = -1;
 uint32 TestSoConIdx = -1;
 uint32 TestTxPduId = -1;
-void OsTask_100ms(void)
+void OsTask_10ms(void)
 {
   SoAd_SoConIdType testGetSoConId;
   Std_ReturnType ret = E_OK;
@@ -89,29 +89,34 @@ void OsTask_PostOsStartup(void)
   vTaskTerminate();
 }
 
-uint32 Isr_KeyA_PressedCtn = 0;
 void Isr_KeyA_Pressed()
 {
-  Isr_KeyA_PressedCtn++;
-  printf("LINE: %d, FUNC: %s() %d \n", __LINE__, __func__, Isr_KeyA_PressedCtn);
-  fflush(stdout);
-
   TestCaseIdx = 4;
   TestSoConIdx = 0;
   TestTxPduId = 0;
 }
 
-uint32 Isr_Key1_PressedCtn = 0;
 void Isr_Key1_Pressed()
 {
-  Isr_Key1_PressedCtn++;
-  printf("LINE: %d, FUNC: %s() %d \n", __LINE__, __func__, Isr_Key1_PressedCtn);
-  fflush(stdout);
-
   TestCaseIdx = 5;
   TestSoConIdx = 1;
   TestTxPduId = 1;
 }
+
+void Isr_Key2_Pressed()
+{
+  TestCaseIdx = 1;
+  TestSoConIdx = 0;
+  TestTxPduId = 0;
+}
+
+void Isr_Key3_Pressed()
+{
+  TestCaseIdx = 2;
+  TestSoConIdx = 0;
+  TestTxPduId = 0;
+}
+
 
 int main()
 {
@@ -122,29 +127,31 @@ int main()
   vIsrInit();
 
   PostOsStartupTask = vTaskCreate(OsTask_PostOsStartup, 255, VTASK_PREEMP_NON);
-  BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_NON);
-  Task_100ms = vTaskCreate(OsTask_100ms, 0, VTASK_PREEMP_FULL);
+  BswMainTask_1ms = vTaskCreate(OsTask_BswMain_1ms, 10, VTASK_PREEMP_NON);
+  Task_10ms = vTaskCreate(OsTask_10ms, 0, VTASK_PREEMP_FULL);
 
   vAlarmPar_t bswMainAlarmPar_10ms =
   {
       VALARM_AUTO,
-      10,
+      1,
       VALARM_ACTION_ACTIVATE_TASK,
-      (void *)BswMainTask_10ms
+      (void *)BswMainTask_1ms
   };
-  vAlarmPar_t AlarmPar_100ms =
+  vAlarmPar_t AlarmPar_10ms =
   {
       VALARM_AUTO,
-      100,
+      10,
       VALARM_ACTION_ACTIVATE_TASK,
-      (void *)Task_100ms,
+      (void *)Task_10ms,
   };
 
   BswMainAlarm_10ms = vAlarmCreate(&bswMainAlarmPar_10ms);
-  Alarm_1ms = vAlarmCreate(&AlarmPar_100ms);
+  Alarm_1ms = vAlarmCreate(&AlarmPar_10ms);
 
   vIsrCreate(VISR_MASK_KEY_A, &Isr_KeyA_Pressed);
   vIsrCreate(VISR_MASK_KEY_1, &Isr_Key1_Pressed);
+  vIsrCreate(VISR_MASK_KEY_2, &Isr_Key2_Pressed);
+  vIsrCreate(VISR_MASK_KEY_3, &Isr_Key3_Pressed);
 
   vTaskActivate(PostOsStartupTask);
 
