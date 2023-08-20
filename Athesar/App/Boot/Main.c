@@ -79,8 +79,6 @@ void OsTask_100ms(void)
     break;
   }
 
-  Sleep(1000);
-
   vTaskTerminate();
 }
 
