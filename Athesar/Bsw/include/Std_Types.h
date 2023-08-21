@@ -12,9 +12,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include "Std_Compiler.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 /* ================================ [ MACROS    ] ============================================== */
 #ifndef NULL
 #define NULL ((void *)0)
@@ -81,6 +79,17 @@ typedef uint_fast32_t uint32f;
 typedef int_fast8_t sint8f;
 typedef int_fast16_t sint16f;
 typedef int_fast32_t sint32f;
+
+
+/* @SWS_Std_00015 */
+typedef struct
+{
+  uint16 vendorId;
+  uint16 moduleID;
+  uint8 sw_major_version;
+  uint8 sw_minor_version;
+  uint8 sw_patch_version;
+} Std_VersionInfoType;
 
 
 #endif

@@ -242,3 +242,21 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort)
 
   return ret;
 }
+
+/* @SWS_SoAd_00520 */
+Std_ReturnType SoAd_RequestIpAddrAssignment(
+  SoAd_SoConIdType SoConId,
+  TcpIp_IpAddrAssignmentType Type,
+  const TcpIp_SockAddrType *LocalIpAddrPtr,
+  uint8_t Netmask,
+  const TcpIp_SockAddrType *DefaultRouterPtr)
+{
+  return E_OK;
+}
+
+/* @SWS_SoAd_00536 */
+Std_ReturnType SoAd_ReleaseIpAddrAssignment(
+  SoAd_SoConIdType SoConId)
+{
+  return E_OK;
+}

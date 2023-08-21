@@ -1,6 +1,6 @@
 
 
-#include "DoIP_Cbk.h"
+#include "DoIP.h"
 #include "Stdio.h"
 
 #ifndef UNUSED
@@ -10,6 +10,9 @@
 #define DOIP_RANDOM_BUFF_SIZE 50
 
 #define STD_RETURN_TYPE_AS_STRING(ret) ((ret == 0) ? ("E_OK") : ("E_NOT_OK"))
+
+//#define USE_DUMMY_BSW
+#ifdef USE_DUMMY_BSW
 
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
@@ -241,3 +244,4 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
   return BUFREQ_OK;
 }
 
+#endif
