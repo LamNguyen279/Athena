@@ -133,7 +133,7 @@ int main()
   vAlarmPar_t bswMainAlarmPar_10ms =
   {
       VALARM_AUTO,
-      1,
+      10,
       VALARM_ACTION_ACTIVATE_TASK,
       (void *)BswMainTask_1ms
   };

@@ -124,7 +124,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         SOAD_FALSE,/* SoAdSocketAutomaticSoConSetup */
         5,/* SoAdSocketFramePriority */
         SOAD_TRUE,/* SoAdSocketIpAddrAssignmentChgNotification */
-        10000,/* SoAdSocketLocalPort */
+        20000,/* SoAdSocketLocalPort */
         SOAD_FALSE,/* SoAdSocketMsgAcceptanceFilterEnabled */
         SOAD_TRUE,/* SoAdSocketSoConModeChgNotification */
         0,/* SoAdSocketTpRxBufferMin */
@@ -132,7 +132,7 @@ const SoAd_CfgSoConGrp_t SoAd_SoConGrArr[] =
         VTCPIP_AF_INET, /* W32AfType */
         VTCPIP_SOCK_DGRAM, /* W32SocketType */
         VTCPIP_IPPROTO_UDP, /* W32ProtocolType */
-        "239.255.255.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
+        "127.0.0.1",/* W32LocalAddress[SOAD_IPV4_ADD_SIZE] */
     },
     {
         SOAD_FALSE,/* SoAdPduHeaderEnable */
@@ -184,7 +184,7 @@ const SoAd_CfgSoCon_t SoAd_SoConArr[] =
 {
     /* SoAdSoCon0 */
     {
-        "127.0.0.2", /* SoAdSocketRemoteIpAddress */
+        "239.255.255.1", /* SoAdSocketRemoteIpAddress */
         20000,/* SoAdSocketRemotePort */
         0, /* SoConGrIdx */
         &SoAdSoCon0_PduRouteList[0], /* PduRouteList */

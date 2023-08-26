@@ -104,7 +104,7 @@
 #define SOAD_IS_UDP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_UDP)
 #define SOAD_IS_TCP_SOCON(SoConId)                (SOAD_GET_SOCON_PROTOCOL(SoConId) == VTCPIP_IPPROTO_TCP)
 #define SOAD_IS_TCP_SERVER_SOCON(SoConId)         ( (SOAD_IS_TCP_SOCON((SoConId)) && (SOAD_GET_SOCON_GROUP((SoConId)).SoAdSocketTcpInitiate == SOAD_FALSE)) )
-#define SOAD_IS_MULTICAST_SOCON(SoConId)          ((SOAD_IS_UDP_SOCON((SoConId))) && (soad_isMulticastIpv4Addr( SOAD_GET_SOCON_GROUP((SoConId)).W32LocalAddress ) == SOAD_TRUE))
+#define SOAD_IS_MULTICAST_SOCON(SoConId)          ((SOAD_IS_UDP_SOCON((SoConId))) && (soad_isMulticastIpv4Addr( SoAd_DynSoConArr[SoConId].RemoteAddress ) == SOAD_TRUE))
 //W32 utilities
 #define SOAD_W32_INVALID_SOCKET   INVALID_SOCKET
 #define SOAD_W32_CHECK_ENV(ret) \

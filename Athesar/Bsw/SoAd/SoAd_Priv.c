@@ -471,7 +471,7 @@ static void soad_HandleSoConStateBind(SoAd_SoConIdType SoConId)
       /* SWS_SoAd_00639, create thread for receive UDP data */
       if(SOAD_IS_MULTICAST_SOCON(SoConId))
       {
-        mreq.imr_multiaddr.s_addr = inet_addr(SOAD_GET_SOCON_GROUP(SoConId).W32LocalAddress);
+        mreq.imr_multiaddr.s_addr = inet_addr(SoAd_DynSoConArr[SoConId].RemoteAddress);
         mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 
         if (setsockopt(SoAd_DynSoConArr[SoConId].W32Sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
@@ -644,10 +644,32 @@ static void soad_SocketRxRoutine(SoAd_SoConIdType *SoConId)
 
   SoAd_SoConBuffer_t buffData;
 
+  //for multicast
+  struct sockaddr_in multicastSender;
+  int multicastSenderSize = sizeof(multicastSender);
+
   while(1)
   {
     memset(&rxBuffer[0], 0, SOAD_CFG_SOCON_TRX_BUFF_SIZE);
-    resultLength = recv(thisSoSon->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_TRX_BUFF_SIZE, 0);
+
+    if(SOAD_IS_MULTICAST_SOCON(thisSoConId))
+    {
+      resultLength = recvfrom(thisSoSon->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_TRX_BUFF_SIZE, 0,
+          (struct sockaddr*)&multicastSender, &multicastSenderSize);
+
+      char *ip = inet_ntoa(multicastSender.sin_addr);
+      uint32 port =  ntohs(multicastSender.sin_port);
+
+      //check that Multicast message sender is this SoCon
+      if(soad_IpCmp(&(SOAD_GET_SOCON_GROUP(thisSoConId).W32LocalAddress[0]), ip, SOAD_IPV4_ADD_SIZE) == E_OK &&
+          SOAD_GET_SOCON_GROUP(thisSoConId).SoAdSocketLocalPort == port)
+      {
+        continue;
+      }
+    }else
+    {
+      resultLength = recv(thisSoSon->W32Sock, (char *)&rxBuffer[0], SOAD_CFG_SOCON_TRX_BUFF_SIZE, 0);
+    }
 
     if(resultLength != -1)
     {
