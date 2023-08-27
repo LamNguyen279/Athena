@@ -1,6 +1,3 @@
-
-
-#include "DoIP.h"
 #include "Stdio.h"
 
 #ifndef UNUSED
