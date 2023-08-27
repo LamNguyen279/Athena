@@ -53,6 +53,20 @@ void SoAd_MainFunction(void)
   }
 }
 
+Std_ReturnType SoAd_RequestIpAddrAssignment( SoAd_SoConIdType SoConId,
+    TcpIp_IpAddrAssignmentType Type, const TcpIp_SockAddrType* LocalIpAddrPtr,
+    uint8 Netmask, const TcpIp_SockAddrType* DefaultRouterPtr )
+{
+
+  return E_OK;
+}
+
+Std_ReturnType SoAd_ReleaseIpAddrAssignment(SoAd_SoConIdType SoConId)
+{
+
+  return E_OK;
+}
+
 void SoAd_LocalIpAddrAssignmentChg(TcpIp_LocalAddrIdType IpAddrId, TcpIp_IpAddrStateType State)
 {
 
@@ -242,3 +256,4 @@ Std_ReturnType SoAd_CloseSoCon(SoAd_SoConIdType SoConId, boolean abort)
 
   return ret;
 }
+

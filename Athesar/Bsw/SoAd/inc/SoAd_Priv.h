@@ -44,7 +44,8 @@
   printf("\n"); \
   fflush(stdout)
 #else
-#define SOAD_CONSOLE_LOG(someString, SomeThing)
+#define SOAD_LOG_PAR(SomeString, SomeThing)
+#define SOAD_LOG(SomeString)
 #endif
 
 #define SOAD_TRUE                   STD_ON

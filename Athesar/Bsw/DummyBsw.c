@@ -1,6 +1,6 @@
 
 
-#include "DoIP_Cbk.h"
+#include "DoIP.h"
 #include "Stdio.h"
 
 #ifndef UNUSED
@@ -11,10 +11,12 @@
 
 #define STD_RETURN_TYPE_AS_STRING(ret) ((ret == 0) ? ("E_OK") : ("E_NOT_OK"))
 
+#ifdef USE_DUMMY_BSW
+
 uint32 DoIP_SoAdIfRxIndicationCtn = 0;
 void DoIP_SoAdIfRxIndication(
   PduIdType RxPduId,
-  PduInfoType *PduInfoPtr)
+  const PduInfoType* PduInfoPtr)
 {
   DoIP_SoAdIfRxIndicationCtn++;
 
@@ -98,15 +100,6 @@ BufReq_ReturnType DoIP_SoAdTpCopyRxData(
   printf("DoIP_SoAdTpCopyRxData() %d \n", DoIP_SoAdTpCopyRxDataCtn);
   printf("RxPduId = %d \n", id);
   printf("info->SduLength = %d \n", info->SduLength);
-
-//  if(info->SduDataPtr != NULL)
-//  {
-//    printf("info->SduDataPtr = %s \n", info->SduDataPtr);
-//
-//  }else
-//  {
-//    printf("info->SduDataPtr = %s \n", "NULL_PTR");
-//  }
 
   fflush(stdout);
 
@@ -241,3 +234,4 @@ BufReq_ReturnType DoIP_SoAdTpCopyTxData(
   return BUFREQ_OK;
 }
 
+#endif

@@ -20,7 +20,7 @@
 #include "SoAd.h"
 
 volatile vTaskHandler_t *PostOsStartupTask;
-volatile vTaskHandler_t *BswMainTask_1ms;
+volatile vTaskHandler_t *BswMainTask_10ms;
 volatile vTaskHandler_t *Task_10ms;
 
 volatile vAlarmHandler_t *BswMainAlarm_10ms;
@@ -32,7 +32,7 @@ void OsIdleHook()
   a++;
 }
 
-void OsTask_BswMain_1ms(void)
+void OsTask_BswMain_10ms(void)
 {
   SoAd_MainFunction();
 
@@ -127,7 +127,7 @@ int main()
   vIsrInit();
 
   PostOsStartupTask = vTaskCreate(OsTask_PostOsStartup, 255, VTASK_PREEMP_NON);
-  BswMainTask_1ms = vTaskCreate(OsTask_BswMain_1ms, 10, VTASK_PREEMP_NON);
+  BswMainTask_10ms = vTaskCreate(OsTask_BswMain_10ms, 10, VTASK_PREEMP_NON);
   Task_10ms = vTaskCreate(OsTask_10ms, 0, VTASK_PREEMP_FULL);
 
   vAlarmPar_t bswMainAlarmPar_10ms =
@@ -135,7 +135,7 @@ int main()
       VALARM_AUTO,
       10,
       VALARM_ACTION_ACTIVATE_TASK,
-      (void *)BswMainTask_1ms
+      (void *)BswMainTask_10ms
   };
   vAlarmPar_t AlarmPar_10ms =
   {
