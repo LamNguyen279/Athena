@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+      "vtask.h": "c",
+      "vscheduler.h": "c",
+      "vevent.h": "c",
+      "vos_cfg.h": "c",
+      "std_types.h": "c",
+      "soad.h": "c",
+      "doip_pubtypes.h": "c",
+      "ath_utils.h": "c",
+      "doip_inttypes.h": "c",
+      "doip_cfg.h": "c",
+      "doip_utils.h": "c",
+      "doip.h": "c",
+      "doip_globals.h": "c",
+      "doip_intfunc.h": "c"
+    }
+}
